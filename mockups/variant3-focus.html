@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Вариант 3 — Фокусная карточка</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+    background: #0a0a0f;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+  .container { max-width: 640px; width: 100%; }
+
+  h2 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 20px;
+  }
+
+  /* ─── Tab pills ─── */
+  .tab-row {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+  .tab-pill {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: rgba(255,255,255,0.5);
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .tab-pill:hover {
+    background: rgba(255,255,255,0.06);
+  }
+  .tab-pill.active {
+    background: rgba(110,86,207,0.08);
+    border-color: rgba(110,86,207,0.4);
+    color: #fff;
+  }
+  .tab-pill .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .tab-pill .rec-badge {
+    font-size: 8px;
+    font-weight: 700;
+    color: #6E56CF;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  /* ─── Focus card ─── */
+  .focus-card {
+    background: rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    overflow: hidden;
+    display: none;
+  }
+  .focus-card.active { display: block; }
+
+  /* Hero area */
+  .focus-hero {
+    padding: 24px 24px 20px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+  }
+  .focus-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.2;
+    margin-bottom: 6px;
+  }
+  .focus-subtitle {
+    font-size: 13px;
+    color: rgba(255,255,255,0.4);
+    line-height: 1.5;
+    max-width: 380px;
+  }
+
+  /* Gauge */
+  .gauge-wrap {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  .gauge {
+    width: 64px; height: 64px;
+    position: relative;
+  }
+  .gauge svg {
+    position: absolute;
+    top: 0; left: 0;
+    transform: rotate(-90deg);
+  }
+  .gauge .pct {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 800;
+  }
+  .gauge-label {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+
+  /* Divider */
+  .focus-divider {
+    height: 1px;
+    background: rgba(255,255,255,0.06);
+    margin: 0 24px;
+  }
+
+  /* Strengths/Gaps — horizontal split */
+  .sg-row {
+    display: grid;
+    grid-template-columns: 1fr 1px 1fr;
+    min-height: 140px;
+  }
+  .sg-col {
+    padding: 20px 24px;
+  }
+  .sg-divider {
+    background: rgba(255,255,255,0.06);
+  }
+  .sg-title {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .sg-title .icon {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    font-weight: 700;
+  }
+  .sg-list {
+    list-style: none;
+  }
+  .sg-list li {
+    font-size: 13px;
+    color: rgba(255,255,255,0.6);
+    line-height: 1.5;
+    margin-bottom: 4px;
+    padding-left: 14px;
+    position: relative;
+  }
+  .sg-list li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 8px;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+  }
+  .sg-list.green li::before { background: #34C759; }
+  .sg-list.red li::before { background: #FF3B30; }
+
+  /* Bottom bar */
+  .focus-bottom {
+    padding: 16px 24px;
+    background: rgba(255,255,255,0.015);
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .meta-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    flex: 1;
+  }
+  .meta-chip {
+    font-size: 10px;
+    color: rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.04);
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+  .meta-chip.team {
+    color: rgba(110,86,207,0.7);
+    background: rgba(110,86,207,0.08);
+  }
+
+  .cta-btn {
+    flex-shrink: 0;
+    padding: 10px 24px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, #6E56CF, #7C66DC);
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .cta-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px rgba(110,86,207,0.3);
+  }
+
+  /* annotation */
+  .design-note {
+    margin-top: 40px;
+    padding: 16px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    border: 1px dashed rgba(255,255,255,0.1);
+  }
+  .design-note h3 {
+    font-size: 13px;
+    color: #6E56CF;
+    margin-bottom: 8px;
+  }
+  .design-note p, .design-note li {
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.6;
+  }
+  .design-note ul {
+    padding-left: 16px;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>Подходящие роли</h2>
+
+  <!-- Tab pills -->
+  <div class="tab-row">
+    <div class="tab-pill active" onclick="switchTab(0)">
+      <span class="dot" style="background: #34C759"></span>
+      Категорийный менеджер
+      <span class="rec-badge">✦</span>
+    </div>
+    <div class="tab-pill" onclick="switchTab(1)">
+      <span class="dot" style="background: #FF9500"></span>
+      Маркетплейс-менеджер
+    </div>
+    <div class="tab-pill" onclick="switchTab(2)">
+      <span class="dot" style="background: #FF3B30"></span>
+      Логистика и закупки
+    </div>
+  </div>
+
+  <!-- Card 1 -->
+  <div class="focus-card active" id="card-0">
+    <div class="focus-hero">
+      <div>
+        <div class="focus-title">Менеджер категории</div>
+        <div class="focus-subtitle">
+          Самое естественное позиционирование: 4+ года прямого опыта в трёх компаниях.
+          Сильные результаты в оборачиваемости и коммерческих условиях.
+        </div>
+      </div>
+      <div class="gauge-wrap">
+        <div class="gauge">
+          <svg width="64" height="64" viewBox="0 0 64 64">
+            <circle cx="32" cy="32" r="27" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="4"/>
+            <circle cx="32" cy="32" r="27" fill="none" stroke="#34C759" stroke-width="4"
+              stroke-dasharray="170" stroke-dashoffset="17" stroke-linecap="round"/>
+          </svg>
+          <span class="pct" style="color: #34C759">90%</span>
+        </div>
+        <span class="gauge-label" style="color: #34C759">высокое</span>
+      </div>
+    </div>
+
+    <div class="focus-divider"></div>
+
+    <div class="sg-row">
+      <div class="sg-col">
+        <div class="sg-title">
+          <span class="icon" style="background: rgba(52,199,89,0.15); color: #34C759">+</span>
+          Сильные стороны
+        </div>
+        <ul class="sg-list green">
+          <li>4+ года прямого опыта (Яндекс, Концепт-мебель, SITWELL)</li>
+          <li>Доказанный результат: снижение оборачиваемости в 3×, скидки на 10 млн руб</li>
+          <li>Полный цикл: от анализа и матрицы до ценообразования и вывода товара</li>
+          <li>Навыки работы с маркетплейсами и поставщиками</li>
+        </ul>
+      </div>
+      <div class="sg-divider"></div>
+      <div class="sg-col">
+        <div class="sg-title">
+          <span class="icon" style="background: rgba(255,59,48,0.15); color: #FF3B30">−</span>
+          Пробелы
+        </div>
+        <ul class="sg-list red">
+          <li>Нет опыта управления командой категорийных специалистов</li>
+          <li>Не упоминается стратегическое планирование портфеля категорий</li>
+          <li>Ограниченный опыт в B2B (в основном B2C розница и маркетплейсы)</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="focus-bottom">
+      <div class="meta-chips">
+        <span class="meta-chip">1С</span>
+        <span class="meta-chip">Битрикс24</span>
+        <span class="meta-chip">Яндекс Маркет</span>
+        <span class="meta-chip">Ozon</span>
+        <span class="meta-chip">Tableau</span>
+        <span class="meta-chip">Excel</span>
+        <span class="meta-chip team">→ Коммерческий директор</span>
+      </div>
+      <button class="cta-btn">Переупаковать</button>
+    </div>
+  </div>
+
+  <!-- Card 2 -->
+  <div class="focus-card" id="card-1">
+    <div class="focus-hero">
+      <div>
+        <div class="focus-title">Маркетплейс-менеджер</div>
+        <div class="focus-subtitle">
+          Параллельная опция благодаря курсу и опыту с Ozon, Wildberries.
+          Актуально для e-commerce компаний, но специализация вторичная.
+        </div>
+      </div>
+      <div class="gauge-wrap">
+        <div class="gauge">
+          <svg width="64" height="64" viewBox="0 0 64 64">
+            <circle cx="32" cy="32" r="27" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="4"/>
+            <circle cx="32" cy="32" r="27" fill="none" stroke="#FF9500" stroke-width="4"
+              stroke-dasharray="170" stroke-dashoffset="76" stroke-linecap="round"/>
+          </svg>
+          <span class="pct" style="color: #FF9500">55%</span>
+        </div>
+        <span class="gauge-label" style="color: #FF9500">среднее</span>
+      </div>
+    </div>
+
+    <div class="focus-divider"></div>
+
+    <div class="sg-row">
+      <div class="sg-col">
+        <div class="sg-title">
+          <span class="icon" style="background: rgba(52,199,89,0.15); color: #34C759">+</span>
+          Сильные стороны
+        </div>
+        <ul class="sg-list green">
+          <li>Опыт работы с Ozon, Wildberries, Яндекс Маркет</li>
+          <li>Прошла курс по управлению маркетплейсами</li>
+        </ul>
+      </div>
+      <div class="sg-divider"></div>
+      <div class="sg-col">
+        <div class="sg-title">
+          <span class="icon" style="background: rgba(255,59,48,0.15); color: #FF3B30">−</span>
+          Пробелы
+        </div>
+        <ul class="sg-list red">
+          <li>Нет глубокого опыта e-commerce</li>
+          <li>Вторичная специализация</li>
+          <li>Нет опыта unit-экономики маркетплейсов</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="focus-bottom">
+      <div class="meta-chips">
+        <span class="meta-chip">Ozon Seller</span>
+        <span class="meta-chip">Wildberries</span>
+        <span class="meta-chip">Яндекс Маркет</span>
+        <span class="meta-chip">Google Sheets</span>
+        <span class="meta-chip team">→ Head of E-commerce</span>
+      </div>
+      <button class="cta-btn">Переупаковать</button>
+    </div>
+  </div>
+
+  <!-- Card 3 -->
+  <div class="focus-card" id="card-2">
+    <div class="focus-hero">
+      <div>
+        <div class="focus-title">Логистика и закупки</div>
+        <div class="focus-subtitle">
+          Вторичная опция. Опыт скорее тактический — поддержка категорий,
+          а не стратегическое управление логистической цепочкой.
+        </div>
+      </div>
+      <div class="gauge-wrap">
+        <div class="gauge">
+          <svg width="64" height="64" viewBox="0 0 64 64">
+            <circle cx="32" cy="32" r="27" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="4"/>
+            <circle cx="32" cy="32" r="27" fill="none" stroke="#FF3B30" stroke-width="4"
+              stroke-dasharray="170" stroke-dashoffset="119" stroke-linecap="round"/>
+          </svg>
+          <span class="pct" style="color: #FF3B30">30%</span>
+        </div>
+        <span class="gauge-label" style="color: #FF3B30">с натяжкой</span>
+      </div>
+    </div>
+
+    <div class="focus-divider"></div>
+
+    <div class="sg-row">
+      <div class="sg-col">
+        <div class="sg-title">
+          <span class="icon" style="background: rgba(52,199,89,0.15); color: #34C759">+</span>
+          Сильные стороны
+        </div>
+        <ul class="sg-list green">
+          <li>Опыт в тактических закупках</li>
+          <li>Знание таможенного оформления</li>
+        </ul>
+      </div>
+      <div class="sg-divider"></div>
+      <div class="sg-col">
+        <div class="sg-title">
+          <span class="icon" style="background: rgba(255,59,48,0.15); color: #FF3B30">−</span>
+          Пробелы
+        </div>
+        <ul class="sg-list red">
+          <li>Тактический уровень, не стратегический</li>
+          <li>Нет управления цепочкой поставок</li>
+          <li>Нет опыта WMS-систем</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="focus-bottom">
+      <div class="meta-chips">
+        <span class="meta-chip">1С</span>
+        <span class="meta-chip">Альта Софт</span>
+        <span class="meta-chip">ВЭД кабинеты</span>
+        <span class="meta-chip team">→ Директор по логистике</span>
+      </div>
+      <button class="cta-btn">Переупаковать</button>
+    </div>
+  </div>
+
+  <!-- Design notes -->
+  <div class="design-note">
+    <h3>Концепция: Фокусная карточка</h3>
+    <ul>
+      <li><b>Таб-переключатели</b> — цветные пиллы с точкой-индикатором. Звёздочка на рекомендованной роли. Переключение без перезагрузки.</li>
+      <li><b>Hero-секция</b> — крупный заголовок роли + 2 строки вместо стены текста. Gauge-кольцо справа вместо текстового бейджа.</li>
+      <li><b>Двухколоночный сплит</b> — сильные стороны vs пробелы чётко разделены визуально. Иконки + и − для мгновенного считывания.</li>
+      <li><b>Bottom bar</b> — стек + позиция в команде + CTA. Всё в одной строке, нет потерянного пространства.</li>
+      <li><b>Рекомендация удалена как блок</b> — вместо стены текста: 2 предложения в subtitle + визуальный приоритет через расположение первым табом.</li>
+      <li><b>Плюс</b> — максимум места для контента каждой роли. Нет визуального шума от других карточек.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+function switchTab(idx) {
+  document.querySelectorAll('.tab-pill').forEach((p, i) => {
+    p.classList.toggle('active', i === idx);
+  });
+  document.querySelectorAll('.focus-card').forEach((c, i) => {
+    c.classList.toggle('active', i === idx);
+  });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,377 @@
+@import "tailwindcss";
+
+/* ================================================================
+   РЕЗЮМЭН — Neo-Brutalism Design System
+   ================================================================ */
+
+/* === PRIMITIVES === */
+:root {
+  /* Structural */
+  --nb-border-width: 2.5px;
+  --nb-shadow-offset: 4px;
+  --nb-radius-sm: 6px;
+  --nb-radius-md: 10px;
+  --nb-radius-lg: 14px;
+  --nb-radius-xl: 18px;
+
+  /* Accent palette (shared) */
+  --nb-coral: #FF6B6B;
+  --nb-lavender: #A78BFA;
+  --nb-mint: #34D399;
+  --nb-amber: #FBBF24;
+  --nb-sky: #60A5FA;
+  --nb-violet: #8B5CF6;
+  --nb-rose: #FB7185;
+  --nb-peach: #FDBA74;
+
+  /* Severity */
+  --nb-critical: #EF4444;
+  --nb-major: #F59E0B;
+  --nb-minor: #3B82F6;
+  --nb-success: #22C55E;
+
+  /* Grade colors */
+  --color-grade-a: #16a34a;
+  --color-grade-b: #65a30d;
+  --color-grade-c: #eab308;
+  --color-grade-d: #f97316;
+  --color-grade-f: #dc2626;
+}
+
+/* === LIGHT THEME (default) === */
+:root, [data-theme="light"] {
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F9F9F9;
+  --bg-card: #FFFFFF;
+  --bg-card-hover: #FFFBEB;
+  --bg-elevated: #F5F5F5;
+  --bg-overlay: rgba(0, 0, 0, 0.5);
+  --bg-input: #FFFFFF;
+
+  --text-primary: #1A1A1A;
+  --text-secondary: #4A4A4A;
+  --text-muted: #888888;
+  --text-inverse: #FFFFFF;
+  --text-on-accent: #1A1A1A;
+
+  --border-color: #1A1A1A;
+  --border-subtle: rgba(0, 0, 0, 0.08);
+
+  --shadow-color: #1A1A1A;
+  --shadow-card: var(--nb-shadow-offset) var(--nb-shadow-offset) 0 var(--shadow-color);
+  --shadow-card-hover: 6px 6px 0 var(--shadow-color);
+  --shadow-button: 3px 3px 0 var(--shadow-color);
+  --shadow-button-active: 1px 1px 0 var(--shadow-color);
+  --shadow-sm: 2px 2px 0 var(--shadow-color);
+
+  --accent: #FFD60A;
+  --accent-hover: #FBC02D;
+  --accent-bg: rgba(255, 214, 10, 0.12);
+  --accent-border: rgba(255, 214, 10, 0.4);
+
+  --header-bg: rgba(255, 255, 255, 0.92);
+  --header-border: var(--border-color);
+
+  --scrollbar-thumb: rgba(0, 0, 0, 0.12);
+  --scrollbar-hover: rgba(0, 0, 0, 0.2);
+
+  --skeleton-base: #EEEEEE;
+  --skeleton-shine: #F7F7F7;
+}
+
+/* === DARK THEME === */
+[data-theme="dark"] {
+  --bg-primary: #101010;
+  --bg-secondary: #161616;
+  --bg-card: #1A1A1A;
+  --bg-card-hover: #222222;
+  --bg-elevated: #1E1E1E;
+  --bg-overlay: rgba(0, 0, 0, 0.75);
+  --bg-input: #161616;
+
+  --text-primary: #F0F0F0;
+  --text-secondary: #A0A0A0;
+  --text-muted: #666666;
+  --text-inverse: #101010;
+  --text-on-accent: #FFFFFF;
+
+  --border-color: #333333;
+  --border-subtle: rgba(255, 255, 255, 0.06);
+
+  --shadow-color: rgba(0, 0, 0, 0.6);
+  --shadow-card: var(--nb-shadow-offset) var(--nb-shadow-offset) 0 var(--shadow-color);
+  --shadow-card-hover: 6px 6px 0 var(--shadow-color);
+  --shadow-button: 3px 3px 0 var(--shadow-color);
+  --shadow-button-active: 1px 1px 0 var(--shadow-color);
+  --shadow-sm: 2px 2px 0 var(--shadow-color);
+
+  --accent: var(--nb-violet);
+  --accent-hover: #A78BFA;
+  --accent-bg: rgba(139, 92, 246, 0.12);
+  --accent-border: rgba(139, 92, 246, 0.3);
+
+  --header-bg: rgba(16, 16, 16, 0.92);
+  --header-border: #333333;
+
+  --scrollbar-thumb: rgba(255, 255, 255, 0.08);
+  --scrollbar-hover: rgba(255, 255, 255, 0.15);
+
+  --skeleton-base: #1E1E1E;
+  --skeleton-shine: #282828;
+}
+
+/* ================================================================
+   GLOBAL STYLES
+   ================================================================ */
+
+html {
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* ================================================================
+   SCROLLBAR
+   ================================================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-hover);
+}
+
+/* ================================================================
+   NEO-BRUTALISM UTILITIES
+   ================================================================ */
+
+.nb-card {
+  background: var(--bg-card);
+  border: var(--nb-border-width) solid var(--border-color);
+  border-radius: var(--nb-radius-lg);
+  box-shadow: var(--shadow-card);
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.nb-card:hover {
+  box-shadow: var(--shadow-card-hover);
+  transform: translate(-1px, -1px);
+}
+
+.nb-card-static {
+  background: var(--bg-card);
+  border: var(--nb-border-width) solid var(--border-color);
+  border-radius: var(--nb-radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.nb-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 20px;
+  font-size: 14px;
+  font-weight: 700;
+  border: var(--nb-border-width) solid var(--border-color);
+  border-radius: var(--nb-radius-md);
+  box-shadow: var(--shadow-button);
+  cursor: pointer;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+  text-decoration: none;
+  user-select: none;
+}
+
+.nb-button:active {
+  box-shadow: var(--shadow-button-active);
+  transform: translate(2px, 2px);
+}
+
+.nb-button-primary {
+  background: var(--accent);
+  color: var(--text-on-accent);
+}
+
+.nb-button-primary:hover {
+  background: var(--accent-hover);
+}
+
+.nb-button-secondary {
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.nb-button-secondary:hover {
+  background: var(--bg-card-hover);
+}
+
+.nb-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  font-size: 11px;
+  font-weight: 700;
+  border: 2px solid var(--border-color);
+  border-radius: 999px;
+  background: var(--bg-card);
+  color: var(--text-primary);
+}
+
+.nb-input {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 14px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: var(--nb-border-width) solid var(--border-color);
+  border-radius: var(--nb-radius-md);
+  box-shadow: var(--shadow-sm);
+  outline: none;
+  transition: box-shadow 0.2s ease;
+}
+
+.nb-input:focus {
+  box-shadow: var(--shadow-card);
+}
+
+/* ================================================================
+   KEYFRAMES
+   ================================================================ */
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+@keyframes pulse-subtle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@keyframes score-fill {
+  from { stroke-dashoffset: var(--circumference); }
+  to { stroke-dashoffset: var(--dash-offset); }
+}
+
+@keyframes bar-fill {
+  from { width: 0%; }
+  to { width: var(--bar-width); }
+}
+
+/* CamelCase keyframes for inline style references */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bounceIn {
+  0% { opacity: 0; transform: scale(0.3); }
+  50% { transform: scale(1.05); }
+  70% { transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-3deg); }
+  75% { transform: rotate(3deg); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: translateY(0); }
+  40% { transform: translateY(-6px); }
+}
+
+@keyframes themeSwitch {
+  0% { transform: scale(1) rotate(0deg); }
+  50% { transform: scale(0.8) rotate(180deg); }
+  100% { transform: scale(1) rotate(360deg); }
+}
+
+/* ================================================================
+   ANIMATION UTILITIES
+   ================================================================ */
+
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out both;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 1.5s linear infinite;
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s ease-in-out infinite;
+}
+
+.animate-score-fill {
+  animation: score-fill 1.2s ease-out both;
+}
+
+.animate-bar-fill {
+  animation: bar-fill 0.8s ease-out both;
+}
+
+.animate-bounce-in {
+  animation: bounceIn 0.5s ease-out both;
+}
+
+.animate-wiggle {
+  animation: wiggle 0.5s ease-in-out;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    var(--skeleton-base) 25%,
+    var(--skeleton-shine) 50%,
+    var(--skeleton-base) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}

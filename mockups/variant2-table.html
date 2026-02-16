@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Вариант 2 — Сравнительная таблица</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+    background: #0a0a0f;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+  .container { max-width: 780px; width: 100%; }
+
+  h2 {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 20px;
+  }
+
+  /* ─── Comparison Grid ─── */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 120px repeat(3, 1fr);
+    gap: 0;
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 14px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.02);
+  }
+
+  /* Header row */
+  .col-header {
+    padding: 16px 14px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    position: relative;
+  }
+  .col-header.recommended {
+    background: rgba(110,86,207,0.06);
+  }
+  .col-header.recommended::after {
+    content: 'рекомендуем';
+    position: absolute;
+    top: 6px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 8px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6E56CF;
+    background: rgba(110,86,207,0.12);
+    padding: 1px 6px;
+    border-radius: 3px;
+  }
+  .col-role-name {
+    font-size: 12px;
+    font-weight: 700;
+    color: #fff;
+    margin-top: 6px;
+    line-height: 1.3;
+  }
+
+  /* Match ring */
+  .match-ring-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .match-ring {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .match-ring svg {
+    position: absolute;
+    top: 0; left: 0;
+    transform: rotate(-90deg);
+  }
+  .match-ring .value {
+    font-size: 11px;
+    font-weight: 700;
+    z-index: 1;
+  }
+
+  /* Row label */
+  .row-label {
+    padding: 12px 14px;
+    font-size: 10px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.3);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    display: flex;
+    align-items: flex-start;
+    border-right: 1px solid rgba(255,255,255,0.04);
+  }
+
+  /* Cell */
+  .cell {
+    padding: 12px 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.5;
+  }
+  .cell.recommended-col {
+    background: rgba(110,86,207,0.03);
+  }
+  .cell:last-child, .row-label:last-child {
+    border-bottom: none;
+  }
+
+  /* Mini list in cell */
+  .mini-list {
+    list-style: none;
+    padding: 0;
+  }
+  .mini-list li {
+    padding-left: 10px;
+    position: relative;
+    margin-bottom: 2px;
+    font-size: 11px;
+    line-height: 1.4;
+  }
+  .mini-list li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 6px;
+    width: 4px; height: 4px;
+    border-radius: 50%;
+  }
+  .mini-list.green li::before { background: #34C759; }
+  .mini-list.red li::before { background: #FF3B30; }
+  .mini-list.orange li::before { background: #FF9500; }
+  .mini-list.neutral li::before { background: rgba(255,255,255,0.2); }
+
+  /* Stack in cell */
+  .cell-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+  }
+  .cell-tag {
+    font-size: 9px;
+    color: rgba(255,255,255,0.4);
+    background: rgba(255,255,255,0.05);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  /* Team position */
+  .team-text {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+  }
+
+  /* Select row */
+  .select-row { grid-column: 1 / -1; display: contents; }
+  .select-cell {
+    padding: 14px;
+    display: flex;
+    justify-content: center;
+  }
+  .select-cell.label-cell { border-right: 1px solid rgba(255,255,255,0.04); }
+
+  .select-btn {
+    width: 100%;
+    padding: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: transparent;
+    color: rgba(255,255,255,0.5);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .select-btn:hover {
+    border-color: rgba(110,86,207,0.5);
+    color: #fff;
+  }
+  .select-btn.primary {
+    background: linear-gradient(135deg, #6E56CF, #7C66DC);
+    border-color: transparent;
+    color: #fff;
+    font-weight: 700;
+  }
+
+  /* annotation */
+  .design-note {
+    margin-top: 40px;
+    padding: 16px;
+    background: rgba(255,255,255,0.03);
+    border-radius: 10px;
+    border: 1px dashed rgba(255,255,255,0.1);
+  }
+  .design-note h3 {
+    font-size: 13px;
+    color: #6E56CF;
+    margin-bottom: 8px;
+  }
+  .design-note p, .design-note li {
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    line-height: 1.6;
+  }
+  .design-note ul {
+    padding-left: 16px;
+    margin-top: 4px;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h2>Подходящие роли</h2>
+
+  <div class="compare-grid">
+    <!-- Header row -->
+    <div class="col-header" style="border-right: 1px solid rgba(255,255,255,0.04);"></div>
+
+    <div class="col-header recommended">
+      <div class="match-ring-wrap">
+        <div class="match-ring">
+          <svg width="48" height="48" viewBox="0 0 48 48">
+            <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="3"/>
+            <circle cx="24" cy="24" r="20" fill="none" stroke="#34C759" stroke-width="3"
+              stroke-dasharray="113" stroke-dashoffset="11" stroke-linecap="round"/>
+          </svg>
+          <span class="value" style="color: #34C759">90%</span>
+        </div>
+      </div>
+      <div class="col-role-name">Категорийный менеджер</div>
+    </div>
+
+    <div class="col-header">
+      <div class="match-ring-wrap">
+        <div class="match-ring">
+          <svg width="48" height="48" viewBox="0 0 48 48">
+            <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="3"/>
+            <circle cx="24" cy="24" r="20" fill="none" stroke="#FF9500" stroke-width="3"
+              stroke-dasharray="113" stroke-dashoffset="50" stroke-linecap="round"/>
+          </svg>
+          <span class="value" style="color: #FF9500">55%</span>
+        </div>
+      </div>
+      <div class="col-role-name">Маркетплейс-менеджер</div>
+    </div>
+
+    <div class="col-header">
+      <div class="match-ring-wrap">
+        <div class="match-ring">
+          <svg width="48" height="48" viewBox="0 0 48 48">
+            <circle cx="24" cy="24" r="20" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="3"/>
+            <circle cx="24" cy="24" r="20" fill="none" stroke="#FF3B30" stroke-width="3"
+              stroke-dasharray="113" stroke-dashoffset="79" stroke-linecap="round"/>
+          </svg>
+          <span class="value" style="color: #FF3B30">30%</span>
+        </div>
+      </div>
+      <div class="col-role-name">Логистика и закупки</div>
+    </div>
+
+    <!-- Strengths row -->
+    <div class="row-label">Сильные стороны</div>
+    <div class="cell recommended-col">
+      <ul class="mini-list green">
+        <li>4+ года прямого опыта</li>
+        <li>Снижение оборачиваемости в 3×</li>
+        <li>Полный цикл управления категорией</li>
+      </ul>
+    </div>
+    <div class="cell">
+      <ul class="mini-list green">
+        <li>Опыт Ozon, Wildberries, Яндекс</li>
+        <li>Курс по маркетплейсам</li>
+      </ul>
+    </div>
+    <div class="cell">
+      <ul class="mini-list green">
+        <li>Опыт в тактических закупках</li>
+      </ul>
+    </div>
+
+    <!-- Gaps row -->
+    <div class="row-label">Пробелы</div>
+    <div class="cell recommended-col">
+      <ul class="mini-list orange">
+        <li>Нет управления командой</li>
+        <li>Только B2C</li>
+      </ul>
+    </div>
+    <div class="cell">
+      <ul class="mini-list orange">
+        <li>Нет глубокого e-commerce</li>
+        <li>Вторичная специализация</li>
+        <li>Нет опыта unit-экономики</li>
+      </ul>
+    </div>
+    <div class="cell">
+      <ul class="mini-list orange">
+        <li>Тактический, не стратегический</li>
+        <li>Нет управления цепочкой</li>
+        <li>Нет опыта WMS систем</li>
+      </ul>
+    </div>
+
+    <!-- Stack row -->
+    <div class="row-label">Стек</div>
+    <div class="cell recommended-col">
+      <div class="cell-tags">
+        <span class="cell-tag">1С</span>
+        <span class="cell-tag">Битрикс24</span>
+        <span class="cell-tag">Яндекс Маркет</span>
+        <span class="cell-tag">Tableau</span>
+        <span class="cell-tag">Excel</span>
+      </div>
+    </div>
+    <div class="cell">
+      <div class="cell-tags">
+        <span class="cell-tag">Ozon Seller</span>
+        <span class="cell-tag">Wildberries</span>
+        <span class="cell-tag">Яндекс Маркет</span>
+      </div>
+    </div>
+    <div class="cell">
+      <div class="cell-tags">
+        <span class="cell-tag">1С</span>
+        <span class="cell-tag">Альта Софт</span>
+        <span class="cell-tag">ВЭД</span>
+      </div>
+    </div>
+
+    <!-- Team row -->
+    <div class="row-label">В команде</div>
+    <div class="cell recommended-col">
+      <span class="team-text">→ Коммерческий директор<br>↔ Маркетинг, логистика</span>
+    </div>
+    <div class="cell">
+      <span class="team-text">→ Head of E-commerce<br>↔ Контент, логистика</span>
+    </div>
+    <div class="cell">
+      <span class="team-text">→ Директор по логистике<br>↔ Склад, закупки</span>
+    </div>
+
+    <!-- Select row -->
+    <div class="select-cell label-cell"></div>
+    <div class="select-cell" style="background: rgba(110,86,207,0.03);">
+      <button class="select-btn primary">Переупаковать ✦</button>
+    </div>
+    <div class="select-cell">
+      <button class="select-btn">Выбрать</button>
+    </div>
+    <div class="select-cell">
+      <button class="select-btn">Выбрать</button>
+    </div>
+  </div>
+
+  <!-- Design notes -->
+  <div class="design-note">
+    <h3>Концепция: Сравнительная таблица</h3>
+    <ul>
+      <li><b>Нет рекомендации-текста</b> — рекомендация выражена визуально: подсвеченная колонка + бейдж + кнопка «Переупаковать».</li>
+      <li><b>Кольца совпадения</b> — процент вместо текста «высокое/среднее». Считывается за 0.1 сек.</li>
+      <li><b>Сравнение бок о бок</b> — видишь все 3 роли одновременно. Сильные стороны и пробелы в одной строке — легко сравнивать.</li>
+      <li><b>Стек и команда</b> — компактные ряды, не перегружают. Стрелки показывают иерархию.</li>
+      <li><b>Прямой CTA</b> — кнопка прямо в таблице, не нужно скроллить.</li>
+      <li><b>Минус</b> — требует горизонтального пространства. На мобильных нужна адаптация (горизонтальный скролл или переключение).</li>
+    </ul>
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Финальный вариант — Сравнительная таблица</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #08080d;
+    color: #fff;
+    display: flex;
+    justify-content: center;
+    padding: 48px 24px;
+    -webkit-font-smoothing: antialiased;
+  }
+  .container { max-width: 960px; width: 100%; }
+
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: rgba(255,255,255,0.25);
+    margin-bottom: 24px;
+  }
+
+  /* ═══════════════════════════════════════════════
+     COMPARISON TABLE
+     ═══════════════════════════════════════════════ */
+  .compare {
+    display: grid;
+    grid-template-columns: 130px repeat(3, 1fr);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.015);
+    backdrop-filter: blur(20px);
+  }
+
+  /* ─── Header row ─── */
+  .header-corner {
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    border-right: 1px solid rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.01);
+  }
+
+  .col-header {
+    padding: 28px 20px 24px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+    position: relative;
+    cursor: pointer;
+    transition: background 0.25s;
+  }
+  .col-header:hover { background: rgba(255,255,255,0.02); }
+
+  /* Selected column glow */
+  .col-header.selected {
+    background: rgba(110,86,207,0.05);
+  }
+  .col-header.selected::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #6E56CF, transparent);
+  }
+
+  /* Recommended badge */
+  .rec-badge {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: #6E56CF;
+    background: rgba(110,86,207,0.12);
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 14px;
+  }
+
+  /* ─── Big gauge ─── */
+  .gauge-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 14px;
+  }
+  .gauge {
+    width: 72px;
+    height: 72px;
+    position: relative;
+  }
+  .gauge svg {
+    position: absolute;
+    top: 0; left: 0;
+    transform: rotate(-90deg);
+    filter: drop-shadow(0 0 6px var(--glow));
+  }
+  .gauge .pct {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+  }
+  .gauge-text {
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    opacity: 0.7;
+  }
+
+  /* Role name */
+  .col-role-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.35;
+  }
+
+  /* ─── Row labels ─── */
+  .row-label {
+    padding: 14px 16px;
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.28);
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    border-right: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    align-items: flex-start;
+    padding-top: 16px;
+    background: rgba(255,255,255,0.01);
+    line-height: 1.3;
+  }
+
+  /* ─── Cells ─── */
+  .cell {
+    padding: 14px 18px;
+    border-bottom: 1px solid rgba(255,255,255,0.04);
+    font-size: 12px;
+    color: rgba(255,255,255,0.55);
+    line-height: 1.55;
+    transition: background 0.25s;
+  }
+  .cell.sel { background: rgba(110,86,207,0.03); }
+
+  /* ─── Bullet lists ─── */
+  .blist {
+    list-style: none;
+    padding: 0;
+  }
+  .blist li {
+    padding-left: 14px;
+    position: relative;
+    margin-bottom: 5px;
+    font-size: 12px;
+    line-height: 1.45;
+    color: rgba(255,255,255,0.6);
+  }
+  .blist li:last-child { margin-bottom: 0; }
+  .blist li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 7px;
+    width: 5px; height: 5px;
+    border-radius: 50%;
+  }
+  .blist.str li::before { background: #34C759; box-shadow: 0 0 4px rgba(52,199,89,0.3); }
+  .blist.gap li::before { background: #FF6B35; box-shadow: 0 0 4px rgba(255,107,53,0.3); }
+
+  /* empty state for short lists */
+  .blist.gap li.minor { color: rgba(255,255,255,0.35); }
+
+  /* ─── Strength count badge ─── */
+  .count-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+  .count-badge.str { color: #34C759; background: rgba(52,199,89,0.08); }
+  .count-badge.gap { color: #FF6B35; background: rgba(255,107,53,0.08); }
+
+  /* ─── Tags ─── */
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .tag {
+    font-size: 10px;
+    font-weight: 500;
+    color: rgba(255,255,255,0.45);
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.04);
+    padding: 3px 8px;
+    border-radius: 5px;
+    transition: all 0.15s;
+  }
+  .cell.sel .tag {
+    border-color: rgba(110,86,207,0.12);
+  }
+
+  /* ─── Team ─── */
+  .team {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    line-height: 1.6;
+  }
+  .team .arrow {
+    color: rgba(110,86,207,0.6);
+    font-weight: 600;
+  }
+
+  /* ─── Duties (collapsed) ─── */
+  .duties-preview {
+    font-size: 11px;
+    color: rgba(255,255,255,0.4);
+    line-height: 1.5;
+  }
+
+  /* ─── Bottom action row ─── */
+  .action-corner {
+    border-right: 1px solid rgba(255,255,255,0.05);
+    background: rgba(255,255,255,0.01);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .action-cell {
+    padding: 16px 18px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .btn {
+    width: 100%;
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.45);
+  }
+  .btn-ghost:hover {
+    border-color: rgba(110,86,207,0.4);
+    color: rgba(255,255,255,0.7);
+    background: rgba(110,86,207,0.04);
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, #6E56CF 0%, #8B6FE8 100%);
+    border: none;
+    color: #fff;
+    font-weight: 700;
+    box-shadow: 0 2px 12px rgba(110,86,207,0.25);
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(110,86,207,0.35);
+  }
+
+  /* ═══════════════════════════════════════════════
+     SELECTED COLUMN HIGHLIGHT (full column)
+     ═══════════════════════════════════════════════ */
+  /* CSS classes toggled by JS */
+  .col-header:not(.selected) { opacity: 0.85; }
+  .col-header:not(.selected):hover { opacity: 1; }
+
+  /* ═══════════════════════════════════════════════
+     ANIMATIONS
+     ═══════════════════════════════════════════════ */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  .compare {
+    animation: fadeIn 0.4s ease;
+  }
+
+  /* gauge stroke animation */
+  .gauge-arc {
+    transition: stroke-dashoffset 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="section-label">Подходящие роли</div>
+
+  <div class="compare" id="grid">
+
+    <!-- ═══ HEADER ROW ═══ -->
+    <div class="header-corner"></div>
+
+    <!-- Col 1: Recommended -->
+    <div class="col-header selected" data-col="0" onclick="selectCol(0)">
+      <div class="rec-badge">Лучшее совпадение</div>
+      <div class="gauge-container">
+        <div class="gauge" style="--glow: rgba(52,199,89,0.4)">
+          <svg width="72" height="72" viewBox="0 0 72 72">
+            <circle cx="36" cy="36" r="30" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="4"/>
+            <circle class="gauge-arc" cx="36" cy="36" r="30" fill="none" stroke="#34C759" stroke-width="4"
+              stroke-dasharray="188.5" stroke-dashoffset="18.85" stroke-linecap="round"/>
+          </svg>
+          <span class="pct" style="color: #34C759">90<span style="font-size:12px;font-weight:600;opacity:0.6">%</span></span>
+        </div>
+      </div>
+      <div class="col-role-name">Категорийный<br>менеджер</div>
+    </div>
+
+    <!-- Col 2 -->
+    <div class="col-header" data-col="1" onclick="selectCol(1)">
+      <div style="height: 21px; margin-bottom: 14px;"></div>
+      <div class="gauge-container">
+        <div class="gauge" style="--glow: rgba(255,149,0,0.3)">
+          <svg width="72" height="72" viewBox="0 0 72 72">
+            <circle cx="36" cy="36" r="30" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="4"/>
+            <circle class="gauge-arc" cx="36" cy="36" r="30" fill="none" stroke="#FF9500" stroke-width="4"
+              stroke-dasharray="188.5" stroke-dashoffset="84.8" stroke-linecap="round"/>
+          </svg>
+          <span class="pct" style="color: #FF9500">55<span style="font-size:12px;font-weight:600;opacity:0.6">%</span></span>
+        </div>
+      </div>
+      <div class="col-role-name">Маркетплейс-<br>менеджер</div>
+    </div>
+
+    <!-- Col 3 -->
+    <div class="col-header" data-col="2" onclick="selectCol(2)">
+      <div style="height: 21px; margin-bottom: 14px;"></div>
+      <div class="gauge-container">
+        <div class="gauge" style="--glow: rgba(255,59,48,0.25)">
+          <svg width="72" height="72" viewBox="0 0 72 72">
+            <circle cx="36" cy="36" r="30" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="4"/>
+            <circle class="gauge-arc" cx="36" cy="36" r="30" fill="none" stroke="#FF3B30" stroke-width="4"
+              stroke-dasharray="188.5" stroke-dashoffset="132" stroke-linecap="round"/>
+          </svg>
+          <span class="pct" style="color: #FF3B30">30<span style="font-size:12px;font-weight:600;opacity:0.6">%</span></span>
+        </div>
+      </div>
+      <div class="col-role-name">Логистика<br>и закупки</div>
+    </div>
+
+    <!-- ═══ STRENGTHS ROW ═══ -->
+    <div class="row-label">Сильные<br>стороны</div>
+
+    <div class="cell sel" data-col="0">
+      <span class="count-badge str">+ 4 совпадения</span>
+      <ul class="blist str">
+        <li>4+ года категорийным менеджером в 3 компаниях</li>
+        <li>Снижение оборачиваемости в 3×, скидки на 10 млн руб</li>
+        <li>Полный цикл: матрица → ценообразование → вывод товара</li>
+        <li>Работа с маркетплейсами и поставщиками</li>
+      </ul>
+    </div>
+    <div class="cell" data-col="1">
+      <span class="count-badge str">+ 2 совпадения</span>
+      <ul class="blist str">
+        <li>Опыт с Ozon, Wildberries, Яндекс Маркет</li>
+        <li>Курс по управлению маркетплейсами</li>
+      </ul>
+    </div>
+    <div class="cell" data-col="2">
+      <span class="count-badge str">+ 1 совпадение</span>
+      <ul class="blist str">
+        <li>Опыт в тактических закупках для поддержки категорий</li>
+      </ul>
+    </div>
+
+    <!-- ═══ GAPS ROW ═══ -->
+    <div class="row-label">Пробелы</div>
+
+    <div class="cell sel" data-col="0">
+      <span class="count-badge gap">2 пробела</span>
+      <ul class="blist gap">
+        <li>Нет управления командой категорийных спецов</li>
+        <li>Ограничен B2C сегментом</li>
+      </ul>
+    </div>
+    <div class="cell" data-col="1">
+      <span class="count-badge gap">3 пробела</span>
+      <ul class="blist gap">
+        <li>Нет глубокого e-commerce опыта</li>
+        <li>Вторичная, не основная специализация</li>
+        <li>Нет опыта unit-экономики маркетплейсов</li>
+      </ul>
+    </div>
+    <div class="cell" data-col="2">
+      <span class="count-badge gap">3 пробела</span>
+      <ul class="blist gap">
+        <li>Тактический уровень, не стратегический</li>
+        <li>Нет управления цепочкой поставок</li>
+        <li>Нет опыта WMS-систем</li>
+      </ul>
+    </div>
+
+    <!-- ═══ DUTIES ROW ═══ -->
+    <div class="row-label">Обязан-<br>ности</div>
+
+    <div class="cell sel" data-col="0">
+      <div class="duties-preview">Управление ассортиментной матрицей, ценообразование, переговоры с поставщиками, анализ продаж категории</div>
+    </div>
+    <div class="cell" data-col="1">
+      <div class="duties-preview">Вывод товаров на площадки, управление карточками, аналитика продаж, работа с рекламными кабинетами</div>
+    </div>
+    <div class="cell" data-col="2">
+      <div class="duties-preview">Планирование закупок, контроль складских остатков, работа с поставщиками, таможенное оформление</div>
+    </div>
+
+    <!-- ═══ STACK ROW ═══ -->
+    <div class="row-label">Стек</div>
+
+    <div class="cell sel" data-col="0">
+      <div class="tags">
+        <span class="tag">1С</span>
+        <span class="tag">Битрикс24</span>
+        <span class="tag">Яндекс Маркет</span>
+        <span class="tag">Ozon</span>
+        <span class="tag">Tableau</span>
+        <span class="tag">Excel</span>
+      </div>
+    </div>
+    <div class="cell" data-col="1">
+      <div class="tags">
+        <span class="tag">Ozon Seller</span>
+        <span class="tag">Wildberries</span>
+        <span class="tag">Яндекс Маркет</span>
+        <span class="tag">Google Sheets</span>
+      </div>
+    </div>
+    <div class="cell" data-col="2">
+      <div class="tags">
+        <span class="tag">1С</span>
+        <span class="tag">Альта Софт</span>
+        <span class="tag">ВЭД кабинеты</span>
+      </div>
+    </div>
+
+    <!-- ═══ TEAM ROW ═══ -->
+    <div class="row-label">В команде</div>
+
+    <div class="cell sel" data-col="0" style="border-bottom: none;">
+      <div class="team">
+        <span class="arrow">↑</span> Коммерческий директор<br>
+        <span class="arrow">↔</span> Маркетинг, логистика, аналитика
+      </div>
+    </div>
+    <div class="cell" data-col="1" style="border-bottom: none;">
+      <div class="team">
+        <span class="arrow">↑</span> Head of E-commerce<br>
+        <span class="arrow">↔</span> Контент, логистика, дизайн
+      </div>
+    </div>
+    <div class="cell" data-col="2" style="border-bottom: none;">
+      <div class="team">
+        <span class="arrow">↑</span> Директор по логистике<br>
+        <span class="arrow">↔</span> Склад, закупки, ВЭД
+      </div>
+    </div>
+
+    <!-- ═══ ACTION ROW ═══ -->
+    <div class="action-corner"></div>
+
+    <div class="action-cell sel" data-col="0">
+      <button class="btn btn-primary" id="cta-0">Переупаковать под эту роль</button>
+    </div>
+    <div class="action-cell" data-col="1">
+      <button class="btn btn-ghost" id="cta-1">Выбрать</button>
+    </div>
+    <div class="action-cell" data-col="2">
+      <button class="btn btn-ghost" id="cta-2">Выбрать</button>
+    </div>
+  </div>
+</div>
+
+<script>
+function selectCol(idx) {
+  // Headers
+  document.querySelectorAll('.col-header').forEach((h, i) => {
+    h.classList.toggle('selected', i === idx);
+  });
+  // Cells
+  document.querySelectorAll('.cell, .action-cell').forEach(c => {
+    const col = parseInt(c.dataset.col);
+    if (!isNaN(col)) c.classList.toggle('sel', col === idx);
+  });
+  // Buttons
+  [0, 1, 2].forEach(i => {
+    const btn = document.getElementById('cta-' + i);
+    if (i === idx) {
+      btn.className = 'btn btn-primary';
+      btn.textContent = 'Переупаковать под эту роль';
+    } else {
+      btn.className = 'btn btn-ghost';
+      btn.textContent = 'Выбрать';
+    }
+  });
+}
+</script>
+</body>
+</html>

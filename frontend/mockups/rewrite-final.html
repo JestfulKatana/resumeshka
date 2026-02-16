@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rewrite Panel — Final Mockup</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #0a0a0a; color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+    padding: 40px 24px;
+  }
+  .panel { max-width: 880px; margin: 0 auto; }
+
+  /* Toast notification */
+  .toast {
+    position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%) translateY(60px);
+    background: #1a1a1a; border: 1px solid rgba(52,199,89,0.3);
+    color: #34C759; font-size: 13px; font-weight: 600;
+    padding: 10px 20px; border-radius: 10px;
+    opacity: 0; transition: all 0.3s ease; pointer-events: none;
+    z-index: 100;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Copy result overlay */
+  .copy-preview {
+    position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.85); z-index: 200;
+    display: none; align-items: center; justify-content: center;
+    backdrop-filter: blur(8px);
+  }
+  .copy-preview.show { display: flex; }
+  .copy-preview-inner {
+    background: #141414; border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 16px; padding: 24px; max-width: 640px; width: 90%;
+    max-height: 80vh; overflow-y: auto;
+  }
+  .copy-preview-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .copy-preview pre {
+    font-family: 'SF Mono', 'JetBrains Mono', monospace;
+    font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.7;
+    white-space: pre-wrap; word-break: break-word;
+    background: rgba(255,255,255,0.03); border-radius: 10px;
+    padding: 16px; border: 1px solid rgba(255,255,255,0.06);
+  }
+</style>
+</head>
+<body>
+
+<div class="panel">
+
+  <!-- Role badge + controls -->
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px;">
+    <span style="font-size: 12px; font-weight: 700; color: #6E56CF; background: rgba(110,86,207,0.12); padding: 4px 12px; border-radius: 6px; border: 1px solid rgba(110,86,207,0.2);">
+      Роль: Ведущий категорийный менеджер
+    </span>
+    <div style="display: flex; gap: 8px; align-items: center;">
+      <button style="font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.5); background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; padding: 4px 12px; cursor: pointer;">
+        Выбрать другую роль
+      </button>
+    </div>
+  </div>
+
+  <!-- Summary block -->
+  <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; padding: 20px; margin-bottom: 20px;">
+    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+      <span style="font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.8px;">О себе</span>
+      <button onclick="copySummary()" style="font-size: 11px; color: rgba(255,255,255,0.4); cursor: pointer; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); padding: 3px 10px; border-radius: 5px;">Копировать</button>
+    </div>
+    <p id="summary-text" style="font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.65;">
+      Категорийный менеджер с опытом управления ассортиментом и ценообразованием на маркетплейсах (Ozon, Wildberries, Яндекс Маркет). Специализация — оптимизация товарной матрицы, запуск маркетинговых кампаний и аналитика конкурентного ландшафта. Ключевой результат: рост оборачиваемости категорий и высвобождение оборотного капитала через работу с поставщиками.
+    </p>
+  </div>
+
+  <!-- Experience section label -->
+  <div style="font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.35); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px;">
+    Опыт работы
+  </div>
+
+  <!-- ======= EXPERIENCE BLOCK 1 ======= -->
+  <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; margin-bottom: 12px; overflow: hidden;">
+
+    <!-- Header -->
+    <div style="padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04);">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 4px; height: 22px; border-radius: 2px; background: #FF9500;"></div>
+        <span style="font-size: 15px; font-weight: 800; color: #fff;">ООО Концепт-мебель</span>
+        <span style="font-size: 13px; color: rgba(255,255,255,0.45);">— Ведущий категорийный менеджер</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <button onclick="copyBlock(0)" style="font-size: 11px; color: rgba(255,255,255,0.4); cursor: pointer; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); padding: 3px 10px; border-radius: 5px;">Копировать</button>
+        <span style="font-size: 11px; color: rgba(255,255,255,0.3); font-family: monospace;">Июн 2024 — Ноя 2024</span>
+      </div>
+    </div>
+
+    <!-- Two columns: text + hints -->
+    <div style="display: grid; grid-template-columns: 1fr 240px;">
+
+      <!-- Left: resume text -->
+      <div style="padding: 18px 20px;" id="block-0">
+        <!-- Responsibilities line — IN the text -->
+        <p style="font-size: 12px; color: rgba(255,255,255,0.35); line-height: 1.55; margin-bottom: 14px; font-style: italic; border-left: 2px solid rgba(255,255,255,0.08); padding-left: 10px;">
+          Управление ассортиментом и ценообразованием на 4 маркетплейсах, планирование и проведение маркетинговых кампаний, работа с поставщиками, конкурентная аналитика
+        </p>
+
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div style="display: flex; gap: 8px; line-height: 1.6;" data-hint="1">
+            <span style="color: rgba(255,255,255,0.15); flex-shrink: 0; font-size: 18px; line-height: 1.2;">·</span>
+            <span class="bullet-text" style="font-size: 13px; color: rgba(255,255,255,0.8);">Интегрировал управление товарными данными на 4 маркетплейсах (Озон, WB, Яндекс, Мега), внедрив <span style="color: #FF9500; background: rgba(255,149,0,0.1); padding: 0 3px; border-radius: 2px;">[X]</span> фильтров навигации — сократил время синхронизации и повысил видимость категорий на <span style="color: #FF9500; background: rgba(255,149,0,0.1); padding: 0 3px; border-radius: 2px;">[Y%]</span></span>
+          </div>
+
+          <div style="display: flex; gap: 8px; line-height: 1.6;" data-hint="2">
+            <span style="color: rgba(255,255,255,0.15); flex-shrink: 0; font-size: 18px; line-height: 1.2;">·</span>
+            <span class="bullet-text" style="font-size: 13px; color: rgba(255,255,255,0.8);">Оптимизировал ассортиментную матрицу из <span style="color: #FF9500; background: rgba(255,149,0,0.1); padding: 0 3px; border-radius: 2px;">[X категорий]</span>, вывел <span style="color: #FF9500; background: rgba(255,149,0,0.1); padding: 0 3px; border-radius: 2px;">[Z]</span> неликвидных SKU и ввёл <span style="color: #FF9500; background: rgba(255,149,0,0.1); padding: 0 3px; border-radius: 2px;">[N]</span> новых позиций — оборачиваемость категорий +<span style="color: #FF9500; background: rgba(255,149,0,0.1); padding: 0 3px; border-radius: 2px;">[%]</span></span>
+          </div>
+
+          <div style="display: flex; gap: 8px; line-height: 1.6;" data-hint="3">
+            <span style="color: rgba(255,255,255,0.15); flex-shrink: 0; font-size: 18px; line-height: 1.2;">·</span>
+            <span class="bullet-text" style="font-size: 13px; color: rgba(255,255,255,0.8);">Спроектировал систему динамического ценообразования на основе мониторинга конкурентов и спроса — стабилизировал целевую маржу на уровне <span style="color: #FF9500; background: rgba(255,149,0,0.1); padding: 0 3px; border-radius: 2px;">[X%]</span>, прибыль категории +<span style="color: #FF9500; background: rgba(255,149,0,0.1); padding: 0 3px; border-radius: 2px;">[Y%]</span></span>
+          </div>
+
+          <div style="display: flex; gap: 8px; line-height: 1.6;">
+            <span style="color: rgba(255,255,255,0.15); flex-shrink: 0; font-size: 18px; line-height: 1.2;">·</span>
+            <span class="bullet-text" style="font-size: 13px; color: rgba(255,255,255,0.8);">Реализовал 5+ маркетинговых кампаний (сезонные акции, бандлы, промо-коды для Дня знаний и Чёрной пятницы), согласовав доп. скидки от поставщиков — оборот в акционные периоды +<span style="color: #FF9500; background: rgba(255,149,0,0.1); padding: 0 3px; border-radius: 2px;">[X%]</span></span>
+          </div>
+
+          <div style="display: flex; gap: 8px; line-height: 1.6;" data-hint="5">
+            <span style="color: rgba(255,255,255,0.15); flex-shrink: 0; font-size: 18px; line-height: 1.2;">·</span>
+            <span class="bullet-text" style="font-size: 13px; color: rgba(255,255,255,0.8);">Перевёл ключевых поставщиков на постоплату — расширил сроки на <span style="color: #FF9500; background: rgba(255,149,0,0.1); padding: 0 3px; border-radius: 2px;">[X дней]</span>, высвободив <span style="color: #FF9500; background: rgba(255,149,0,0.1); padding: 0 3px; border-radius: 2px;">[Y млн ₽]</span> оборотного капитала</span>
+          </div>
+        </div>
+
+        <!-- Tech -->
+        <div style="margin-top: 16px; display: flex; gap: 4px; flex-wrap: wrap;">
+          <span style="font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.04); padding: 2px 8px; border-radius: 4px;">Ozon</span>
+          <span style="font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.04); padding: 2px 8px; border-radius: 4px;">Wildberries</span>
+          <span style="font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.04); padding: 2px 8px; border-radius: 4px;">1С</span>
+          <span style="font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.04); padding: 2px 8px; border-radius: 4px;">Power BI</span>
+          <span style="font-size: 10px; font-weight: 600; color: rgba(255,255,255,0.4); background: rgba(255,255,255,0.04); padding: 2px 8px; border-radius: 4px;">Яндекс Маркет</span>
+        </div>
+      </div>
+
+      <!-- Right: hints sidebar -->
+      <div style="border-left: 1px solid rgba(255,255,255,0.04); padding: 18px 16px; background: rgba(255,149,0,0.015);">
+        <div style="font-size: 10px; font-weight: 700; color: #FF9500; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 14px; display: flex; align-items: center; gap: 6px;">
+          <span style="width: 6px; height: 6px; border-radius: 50%; background: #FF9500; opacity: 0.6;"></span>
+          Подсказки
+          <span style="opacity: 0.5; font-weight: 500;">(4)</span>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 14px;">
+          <div>
+            <div style="font-size: 10px; color: rgba(255,149,0,0.5); font-weight: 700; margin-bottom: 3px;">→ буллет 1</div>
+            <p style="font-size: 11px; color: rgba(255,255,255,0.45); line-height: 1.5;">Добавь конкретные цифры: сколько фильтров внедрено? На сколько вырос CTR или конверсия?</p>
+          </div>
+          <div>
+            <div style="font-size: 10px; color: rgba(255,149,0,0.5); font-weight: 700; margin-bottom: 3px;">→ буллет 2</div>
+            <p style="font-size: 11px; color: rgba(255,255,255,0.45); line-height: 1.5;">Уточни масштаб: сколько категорий и SKU в твоей зоне? Это сильное достижение</p>
+          </div>
+          <div>
+            <div style="font-size: 10px; color: rgba(255,149,0,0.5); font-weight: 700; margin-bottom: 3px;">→ буллет 3</div>
+            <p style="font-size: 11px; color: rgba(255,255,255,0.45); line-height: 1.5;">Маржа до и после? Рост оборота? Это то, что директор хочет видеть в резюме Lead Category Manager</p>
+          </div>
+          <div>
+            <div style="font-size: 10px; color: rgba(255,149,0,0.5); font-weight: 700; margin-bottom: 3px;">→ буллет 5</div>
+            <p style="font-size: 11px; color: rgba(255,255,255,0.45); line-height: 1.5;">Размер постоплаты (было/стало) и сумма капитала — финансовый результат, ключевая метрика для найма</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= EXPERIENCE BLOCK 2 (collapsed) ======= -->
+  <div style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06); border-radius: 14px; margin-bottom: 12px; overflow: hidden;">
+    <div style="padding: 14px 20px; display: flex; align-items: center; justify-content: space-between; cursor: pointer;">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="width: 4px; height: 22px; border-radius: 2px; background: #007AFF;"></div>
+        <span style="font-size: 15px; font-weight: 800; color: #fff;">ООО МебельТрейд</span>
+        <span style="font-size: 13px; color: rgba(255,255,255,0.45);">— Категорийный менеджер</span>
+        <span style="font-size: 9px; font-weight: 700; color: #FF9500; background: rgba(255,149,0,0.1); padding: 2px 6px; border-radius: 3px;">2 hints</span>
+      </div>
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <button style="font-size: 11px; color: rgba(255,255,255,0.4); cursor: pointer; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); padding: 3px 10px; border-radius: 5px;">Копировать</button>
+        <span style="font-size: 11px; color: rgba(255,255,255,0.3); font-family: monospace;">Янв 2022 — Май 2024</span>
+        <span style="font-size: 14px; color: rgba(255,255,255,0.25);">▾</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= COPY ALL BLOCK ======= -->
+  <div style="margin-top: 28px; background: rgba(52,199,89,0.04); border: 1px solid rgba(52,199,89,0.15); border-radius: 14px; padding: 20px;">
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+      <div>
+        <div style="font-size: 13px; font-weight: 700; color: rgba(52,199,89,0.8); margin-bottom: 4px;">Скопировать всё резюме</div>
+        <div style="font-size: 11px; color: rgba(255,255,255,0.35);">Чистый текст без подсказок, готовый к вставке на hh.ru / LinkedIn</div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button onclick="showCopyPreview()" style="font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.6); cursor: pointer; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 8px;">
+          Посмотреть
+        </button>
+        <button onclick="copyAll()" style="font-size: 12px; font-weight: 700; color: #fff; cursor: pointer; background: #34C759; border: none; padding: 8px 20px; border-radius: 8px;">
+          Копировать
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Action buttons -->
+  <div style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 24px; margin-top: 28px; display: flex; justify-content: center; gap: 12px;">
+    <button style="padding: 12px 32px; font-size: 15px; font-weight: 700; color: #fff; background: linear-gradient(135deg, #6E56CF, #7C66DC); border: none; border-radius: 12px; cursor: pointer;">
+      Отправить на проверку рекрутеру
+    </button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- Copy preview overlay -->
+<div class="copy-preview" id="copy-preview" onclick="if(event.target===this)this.classList.remove('show')">
+  <div class="copy-preview-inner">
+    <div class="copy-preview-header">
+      <div>
+        <div style="font-size: 14px; font-weight: 700; color: #fff;">Предпросмотр копируемого текста</div>
+        <div style="font-size: 11px; color: rgba(255,255,255,0.4); margin-top: 4px;">Это то, что попадёт в буфер обмена</div>
+      </div>
+      <div style="display: flex; gap: 8px;">
+        <button onclick="copyAll(); document.getElementById('copy-preview').classList.remove('show')" style="font-size: 12px; font-weight: 700; color: #fff; cursor: pointer; background: #34C759; border: none; padding: 8px 16px; border-radius: 8px;">Копировать</button>
+        <button onclick="document.getElementById('copy-preview').classList.remove('show')" style="font-size: 12px; color: rgba(255,255,255,0.5); cursor: pointer; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 8px 16px; border-radius: 8px;">Закрыть</button>
+      </div>
+    </div>
+    <pre id="preview-text"></pre>
+  </div>
+</div>
+
+<script>
+// Resume data (would come from React state in real app)
+const resumeData = {
+  summary: 'Категорийный менеджер с опытом управления ассортиментом и ценообразованием на маркетплейсах (Ozon, Wildberries, Яндекс Маркет). Специализация — оптимизация товарной матрицы, запуск маркетинговых кампаний и аналитика конкурентного ландшафта. Ключевой результат: рост оборачиваемости категорий и высвобождение оборотного капитала через работу с поставщиками.',
+  experiences: [
+    {
+      company: 'ООО Концепт-мебель',
+      role: 'Ведущий категорийный менеджер',
+      period: 'Июнь 2024 — Ноябрь 2024',
+      responsibilities: 'Управление ассортиментом и ценообразованием на 4 маркетплейсах, планирование и проведение маркетинговых кампаний, работа с поставщиками, конкурентная аналитика',
+      bullets: [
+        'Интегрировал управление товарными данными на 4 маркетплейсах (Озон, WB, Яндекс, Мега), внедрив [X] фильтров навигации — сократил время синхронизации и повысил видимость категорий на [Y%]',
+        'Оптимизировал ассортиментную матрицу из [X категорий], вывел [Z] неликвидных SKU и ввёл [N] новых позиций — оборачиваемость категорий +[%]',
+        'Спроектировал систему динамического ценообразования на основе мониторинга конкурентов и спроса — стабилизировал целевую маржу на уровне [X%], прибыль категории +[Y%]',
+        'Реализовал 5+ маркетинговых кампаний (сезонные акции, бандлы, промо-коды для Дня знаний и Чёрной пятницы), согласовав доп. скидки от поставщиков — оборот в акционные периоды +[X%]',
+        'Перевёл ключевых поставщиков на постоплату — расширил сроки на [X дней], высвободив [Y млн ₽] оборотного капитала',
+      ]
+    }
+  ]
+};
+
+function buildCleanText() {
+  let text = '';
+  text += 'О себе:\n';
+  text += resumeData.summary + '\n\n';
+
+  resumeData.experiences.forEach(exp => {
+    text += `${exp.company} — ${exp.role}\n`;
+    text += `${exp.period}\n`;
+    text += `${exp.responsibilities}\n\n`;
+    exp.bullets.forEach(b => {
+      text += `• ${b}\n`;
+    });
+    text += '\n';
+  });
+
+  return text.trim();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function copyAll() {
+  const text = buildCleanText();
+  navigator.clipboard.writeText(text).then(() => showToast('Резюме скопировано в буфер'));
+}
+
+function copySummary() {
+  navigator.clipboard.writeText(resumeData.summary).then(() => showToast('Блок «О себе» скопирован'));
+}
+
+function copyBlock(index) {
+  const exp = resumeData.experiences[index];
+  let text = `${exp.company} — ${exp.role}\n${exp.period}\n${exp.responsibilities}\n\n`;
+  exp.bullets.forEach(b => { text += `• ${b}\n`; });
+  navigator.clipboard.writeText(text.trim()).then(() => showToast(`Блок «${exp.company}» скопирован`));
+}
+
+function showCopyPreview() {
+  document.getElementById('preview-text').textContent = buildCleanText();
+  document.getElementById('copy-preview').classList.add('show');
+}
+</script>
+
+</body>
+</html>

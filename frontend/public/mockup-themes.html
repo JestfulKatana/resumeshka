@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>РЕЗЮМЭН — Варианты палитр</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: #F0F0F0;
+  padding: 32px;
+  color: #1a1a1a;
+}
+h1 { font-size: 28px; font-weight: 900; text-align: center; margin-bottom: 8px; }
+.subtitle { text-align: center; color: #666; margin-bottom: 40px; font-size: 14px; }
+
+.variants { display: flex; flex-direction: column; gap: 48px; max-width: 1300px; margin: 0 auto; }
+
+.variant-title {
+  font-size: 22px; font-weight: 900; margin-bottom: 16px;
+  display: flex; align-items: center; gap: 12px;
+}
+.variant-desc { font-size: 13px; color: #666; margin-bottom: 20px; line-height: 1.5; }
+
+.themes-row { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+
+.theme-panel {
+  border-radius: 16px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.theme-label {
+  font-size: 11px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 1.5px; opacity: 0.5;
+}
+
+/* === Shared component styles === */
+.mock-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom-width: 2.5px; border-bottom-style: solid;
+}
+.mock-logo {
+  display: flex; align-items: center; gap: 10px;
+}
+.mock-logo-box {
+  width: 36px; height: 36px; border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 16px; color: #fff;
+  border: 2.5px solid;
+}
+.mock-logo-text { font-size: 15px; font-weight: 900; letter-spacing: -0.5px; }
+.mock-tabs {
+  display: flex; gap: 0; border-radius: 8px; overflow: hidden;
+  border: 2.5px solid;
+}
+.mock-tab {
+  padding: 5px 14px; font-size: 11px; font-weight: 700;
+  border-right: 2.5px solid;
+}
+.mock-tab:last-child { border-right: none; }
+
+.mock-card {
+  border-radius: 12px;
+  padding: 18px;
+  border: 2.5px solid;
+}
+
+.mock-score {
+  width: 44px; height: 44px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 800; font-size: 16px;
+  border: 2.5px solid; flex-shrink: 0;
+}
+
+.mock-pill {
+  display: inline-flex; align-items: center;
+  padding: 3px 10px; font-size: 10px; font-weight: 700;
+  border-radius: 999px; border: 2px solid;
+}
+
+.mock-button {
+  padding: 8px 18px; font-size: 12px; font-weight: 700;
+  border-radius: 8px; border: 2.5px solid;
+  cursor: default; display: inline-flex; align-items: center; gap: 6px;
+}
+
+.mock-dim-bar {
+  height: 8px; border-radius: 4px; border: 2px solid;
+  overflow: hidden; position: relative;
+}
+.mock-dim-fill {
+  height: 100%; border-radius: 2px;
+}
+
+.mock-section { display: flex; flex-direction: column; gap: 8px; }
+.mock-section-title { font-size: 13px; font-weight: 800; display: flex; align-items: center; gap: 8px; }
+.mock-section-bar { width: 4px; height: 16px; border-radius: 2px; }
+.mock-text { font-size: 12px; line-height: 1.6; }
+
+.mock-skill-tag {
+  display: inline-flex; padding: 3px 8px;
+  font-size: 10px; font-weight: 600;
+  border-radius: 999px; border: 2px solid;
+}
+
+.colors-strip {
+  display: flex; gap: 6px; flex-wrap: wrap;
+}
+.color-dot {
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 2px solid rgba(0,0,0,0.15);
+}
+
+/* === Swatch row === */
+.swatch-row { display: flex; gap: 4px; align-items: center; }
+.swatch { width: 16px; height: 16px; border-radius: 4px; border: 1.5px solid rgba(0,0,0,0.1); }
+.swatch-label { font-size: 9px; font-weight: 600; opacity: 0.6; margin-left: 4px; }
+</style>
+</head>
+<body>
+
+<h1>РЕЗЮМЭН — Варианты палитр</h1>
+<p class="subtitle">3 варианта цветовых тем. Каждый показан в светлой и тёмной версии.</p>
+
+<div class="variants">
+
+<!-- ============================================ -->
+<!-- VARIANT 1: Lavender Mist -->
+<!-- ============================================ -->
+<div>
+  <div class="variant-title">
+    <span style="font-size: 28px;">1</span>
+    Lavender Mist — Лавандовый туман
+  </div>
+  <div class="variant-desc">
+    Мягкая лавандовая база. Тени и бордеры — тёмно-фиолетовые вместо чёрных. Тёплые акценты (коралл, персик) для контраста. Ощущение: дорогой и мягкий, но с характером необрутализма.
+  </div>
+
+  <div class="themes-row">
+    <!-- Light -->
+    <div class="theme-panel" style="background: #F7F5FF; border: 2.5px solid #5B4A9E;">
+      <div class="theme-label" style="color: #5B4A9E;">Светлая тема</div>
+
+      <div class="mock-header" style="background: rgba(247,245,255,0.95); border-color: #5B4A9E;">
+        <div class="mock-logo">
+          <div class="mock-logo-box" style="background: #7C6BC4; border-color: #5B4A9E; box-shadow: 2px 2px 0 #5B4A9E;">P</div>
+          <span class="mock-logo-text" style="color: #2D2552;">РЕЗЮМЭН</span>
+        </div>
+        <div class="mock-tabs" style="border-color: #5B4A9E;">
+          <div class="mock-tab" style="background: #7C6BC4; color: #fff; border-color: #5B4A9E;">Анализ</div>
+          <div class="mock-tab" style="background: #fff; color: #5B4A9E; border-color: #5B4A9E;">Роли</div>
+          <div class="mock-tab" style="background: #fff; color: #5B4A9E; border-color: #5B4A9E;">Переупаковка</div>
+        </div>
+      </div>
+
+      <!-- Score + Card -->
+      <div style="display: flex; gap: 14px; align-items: center;">
+        <div class="mock-score" style="border-color: #22C55E; box-shadow: 3px 3px 0 #22C55E; background: #fff; color: #22C55E;">72</div>
+        <div style="flex: 1;">
+          <div style="font-size: 13px; font-weight: 700; color: #2D2552;">IT-специалист / разработчик</div>
+          <div style="display: flex; gap: 6px; margin-top: 6px;">
+            <span class="mock-pill" style="border-color: #EF4444; color: #EF4444; background: rgba(239,68,68,0.08);">2 critical</span>
+            <span class="mock-pill" style="border-color: #F59E0B; color: #b97a08; background: rgba(245,158,11,0.08);">3 major</span>
+          </div>
+        </div>
+        <span class="mock-pill" style="font-family: 'JetBrains Mono'; border-color: #5B4A9E; background: rgba(91,74,158,0.06); color: #5B4A9E;">B+</span>
+      </div>
+
+      <!-- Section card -->
+      <div class="mock-card" style="border-color: #5B4A9E; box-shadow: 4px 4px 0 #5B4A9E; background: #fff;">
+        <div class="mock-section">
+          <div class="mock-section-title" style="color: #2D2552;">
+            <div class="mock-section-bar" style="background: #FF6B6B;"></div>
+            Опыт работы
+          </div>
+          <div class="mock-text" style="color: #4A4168;">
+            Senior Developer в <span style="border-bottom: 3px solid #EF4444; cursor: pointer;">Яндексе</span> — занимался разработкой <span style="border-bottom: 3px solid #F59E0B;">микросервисов</span> и внутренних инструментов.
+          </div>
+        </div>
+      </div>
+
+      <!-- Dimension bars -->
+      <div class="mock-card" style="border-color: #5B4A9E; box-shadow: 4px 4px 0 #5B4A9E; background: #fff; display: flex; flex-direction: column; gap: 10px;">
+        <div style="font-size: 11px; font-weight: 700; color: #5B4A9E;">Оценка по параметрам</div>
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; color: #4A4168; margin-bottom: 3px;"><span>Релевантность</span><span style="font-family: 'JetBrains Mono';">8/10</span></div>
+          <div class="mock-dim-bar" style="border-color: #5B4A9E; background: #EFECF9;"><div class="mock-dim-fill" style="width: 80%; background: #7C6BC4;"></div></div>
+        </div>
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; color: #4A4168; margin-bottom: 3px;"><span>Структура</span><span style="font-family: 'JetBrains Mono';">6/10</span></div>
+          <div class="mock-dim-bar" style="border-color: #5B4A9E; background: #EFECF9;"><div class="mock-dim-fill" style="width: 60%; background: #F59E0B;"></div></div>
+        </div>
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; color: #4A4168; margin-bottom: 3px;"><span>Достижения</span><span style="font-family: 'JetBrains Mono';">4/10</span></div>
+          <div class="mock-dim-bar" style="border-color: #5B4A9E; background: #EFECF9;"><div class="mock-dim-fill" style="width: 40%; background: #EF4444;"></div></div>
+        </div>
+      </div>
+
+      <!-- Skills + Button -->
+      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+        <span class="mock-skill-tag" style="border-color: #22C55E; color: #16a34a; background: rgba(34,197,94,0.08);">Python</span>
+        <span class="mock-skill-tag" style="border-color: #60A5FA; color: #2563EB; background: rgba(96,165,250,0.08);">React</span>
+        <span class="mock-skill-tag" style="border-color: #FBBF24; color: #b97a08; background: rgba(251,191,36,0.08);">SQL</span>
+        <span class="mock-skill-tag" style="border-color: #5B4A9E; color: #5B4A9E; background: rgba(91,74,158,0.06); border-style: dashed;">Docker</span>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <div class="mock-button" style="background: #7C6BC4; color: #fff; border-color: #5B4A9E; box-shadow: 3px 3px 0 #5B4A9E;">Подобрать роли</div>
+        <div class="mock-button" style="background: #fff; color: #2D2552; border-color: #5B4A9E; box-shadow: 3px 3px 0 #5B4A9E;">Сменить роль</div>
+      </div>
+
+      <div class="colors-strip">
+        <div class="color-dot" style="background: #F7F5FF;" title="bg-primary"></div>
+        <div class="color-dot" style="background: #fff;" title="bg-card"></div>
+        <div class="color-dot" style="background: #EFECF9;" title="bg-secondary"></div>
+        <div class="color-dot" style="background: #7C6BC4;" title="accent"></div>
+        <div class="color-dot" style="background: #5B4A9E;" title="border"></div>
+        <div class="color-dot" style="background: #2D2552;" title="text-primary"></div>
+        <div class="color-dot" style="background: #FF6B6B;" title="coral"></div>
+        <div class="color-dot" style="background: #22C55E;" title="success"></div>
+        <div class="color-dot" style="background: #F59E0B;" title="warning"></div>
+      </div>
+    </div>
+
+    <!-- Dark -->
+    <div class="theme-panel" style="background: #1C1833; border: 2.5px solid #6C5FC7;">
+      <div class="theme-label" style="color: #8B7FD4;">Тёмная тема</div>
+
+      <div class="mock-header" style="background: rgba(28,24,51,0.95); border-color: #6C5FC7;">
+        <div class="mock-logo">
+          <div class="mock-logo-box" style="background: #7C6BC4; border-color: #6C5FC7; box-shadow: 2px 2px 0 rgba(0,0,0,0.4);">P</div>
+          <span class="mock-logo-text" style="color: #E8E4F5;">РЕЗЮМЭН</span>
+        </div>
+        <div class="mock-tabs" style="border-color: #6C5FC7;">
+          <div class="mock-tab" style="background: #9B8FE0; color: #fff; border-color: #6C5FC7;">Анализ</div>
+          <div class="mock-tab" style="background: #252040; color: #9B8FE0; border-color: #6C5FC7;">Роли</div>
+          <div class="mock-tab" style="background: #252040; color: #9B8FE0; border-color: #6C5FC7;">Переупаковка</div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 14px; align-items: center;">
+        <div class="mock-score" style="border-color: #34D399; box-shadow: 3px 3px 0 rgba(0,0,0,0.4); background: #252040; color: #34D399;">72</div>
+        <div style="flex: 1;">
+          <div style="font-size: 13px; font-weight: 700; color: #E8E4F5;">IT-специалист / разработчик</div>
+          <div style="display: flex; gap: 6px; margin-top: 6px;">
+            <span class="mock-pill" style="border-color: #EF4444; color: #F87171; background: rgba(239,68,68,0.12);">2 critical</span>
+            <span class="mock-pill" style="border-color: #F59E0B; color: #FBBF24; background: rgba(245,158,11,0.1);">3 major</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mock-card" style="border-color: #6C5FC7; box-shadow: 4px 4px 0 rgba(0,0,0,0.4); background: #252040;">
+        <div class="mock-section">
+          <div class="mock-section-title" style="color: #E8E4F5;">
+            <div class="mock-section-bar" style="background: #FF6B6B;"></div>
+            Опыт работы
+          </div>
+          <div class="mock-text" style="color: #A8A3C0;">
+            Senior Developer в <span style="border-bottom: 3px solid #EF4444;">Яндексе</span> — занимался разработкой <span style="border-bottom: 3px solid #F59E0B;">микросервисов</span>.
+          </div>
+        </div>
+      </div>
+
+      <div class="mock-card" style="border-color: #6C5FC7; box-shadow: 4px 4px 0 rgba(0,0,0,0.4); background: #252040; display: flex; flex-direction: column; gap: 10px;">
+        <div style="font-size: 11px; font-weight: 700; color: #9B8FE0;">Оценка по параметрам</div>
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; color: #A8A3C0; margin-bottom: 3px;"><span>Релевантность</span><span style="font-family: 'JetBrains Mono';">8/10</span></div>
+          <div class="mock-dim-bar" style="border-color: #6C5FC7; background: #1C1833;"><div class="mock-dim-fill" style="width: 80%; background: #9B8FE0;"></div></div>
+        </div>
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; color: #A8A3C0; margin-bottom: 3px;"><span>Структура</span><span style="font-family: 'JetBrains Mono';">6/10</span></div>
+          <div class="mock-dim-bar" style="border-color: #6C5FC7; background: #1C1833;"><div class="mock-dim-fill" style="width: 60%; background: #FBBF24;"></div></div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+        <span class="mock-skill-tag" style="border-color: #34D399; color: #34D399; background: rgba(34,211,153,0.1);">Python</span>
+        <span class="mock-skill-tag" style="border-color: #60A5FA; color: #60A5FA; background: rgba(96,165,250,0.1);">React</span>
+        <span class="mock-skill-tag" style="border-color: #6C5FC7; color: #9B8FE0; background: rgba(155,143,224,0.08); border-style: dashed;">Docker</span>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <div class="mock-button" style="background: #9B8FE0; color: #fff; border-color: #6C5FC7; box-shadow: 3px 3px 0 rgba(0,0,0,0.4);">Подобрать роли</div>
+        <div class="mock-button" style="background: #252040; color: #E8E4F5; border-color: #6C5FC7; box-shadow: 3px 3px 0 rgba(0,0,0,0.4);">Сменить роль</div>
+      </div>
+
+      <div class="colors-strip">
+        <div class="color-dot" style="background: #1C1833;"></div>
+        <div class="color-dot" style="background: #252040;"></div>
+        <div class="color-dot" style="background: #6C5FC7;"></div>
+        <div class="color-dot" style="background: #9B8FE0;"></div>
+        <div class="color-dot" style="background: #E8E4F5;"></div>
+        <div class="color-dot" style="background: #A8A3C0;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- VARIANT 2: Warm Sand -->
+<!-- ============================================ -->
+<div>
+  <div class="variant-title">
+    <span style="font-size: 28px;">2</span>
+    Warm Sand — Тёплый песок
+  </div>
+  <div class="variant-desc">
+    Тёплая песочная база с шоколадными бордерами и тенями. Акцент — терракота/коралл. Тёмная тема — тёплый тёмно-коричневый, не холодный. Ощущение: уютный крафт, как хороший кофе.
+  </div>
+
+  <div class="themes-row">
+    <!-- Light -->
+    <div class="theme-panel" style="background: #FAF6F1; border: 2.5px solid #5C4033;">
+      <div class="theme-label" style="color: #5C4033;">Светлая тема</div>
+
+      <div class="mock-header" style="background: rgba(250,246,241,0.95); border-color: #5C4033;">
+        <div class="mock-logo">
+          <div class="mock-logo-box" style="background: #D4603A; border-color: #5C4033; box-shadow: 2px 2px 0 #5C4033;">P</div>
+          <span class="mock-logo-text" style="color: #2C1810;">РЕЗЮМЭН</span>
+        </div>
+        <div class="mock-tabs" style="border-color: #5C4033;">
+          <div class="mock-tab" style="background: #D4603A; color: #fff; border-color: #5C4033;">Анализ</div>
+          <div class="mock-tab" style="background: #FFF8F2; color: #5C4033; border-color: #5C4033;">Роли</div>
+          <div class="mock-tab" style="background: #FFF8F2; color: #5C4033; border-color: #5C4033;">Переупаковка</div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 14px; align-items: center;">
+        <div class="mock-score" style="border-color: #22C55E; box-shadow: 3px 3px 0 #22C55E; background: #FFF8F2; color: #22C55E;">72</div>
+        <div style="flex: 1;">
+          <div style="font-size: 13px; font-weight: 700; color: #2C1810;">IT-специалист / разработчик</div>
+          <div style="display: flex; gap: 6px; margin-top: 6px;">
+            <span class="mock-pill" style="border-color: #DC2626; color: #DC2626; background: rgba(220,38,38,0.06);">2 critical</span>
+            <span class="mock-pill" style="border-color: #D97706; color: #D97706; background: rgba(217,119,6,0.06);">3 major</span>
+          </div>
+        </div>
+        <span class="mock-pill" style="font-family: 'JetBrains Mono'; border-color: #5C4033; background: rgba(92,64,51,0.05); color: #5C4033;">B+</span>
+      </div>
+
+      <div class="mock-card" style="border-color: #5C4033; box-shadow: 4px 4px 0 #5C4033; background: #FFF8F2;">
+        <div class="mock-section">
+          <div class="mock-section-title" style="color: #2C1810;">
+            <div class="mock-section-bar" style="background: #D4603A;"></div>
+            Опыт работы
+          </div>
+          <div class="mock-text" style="color: #6B5445;">
+            Senior Developer в <span style="border-bottom: 3px solid #DC2626;">Яндексе</span> — занимался разработкой <span style="border-bottom: 3px solid #D97706;">микросервисов</span> и внутренних инструментов.
+          </div>
+        </div>
+      </div>
+
+      <div class="mock-card" style="border-color: #5C4033; box-shadow: 4px 4px 0 #5C4033; background: #FFF8F2; display: flex; flex-direction: column; gap: 10px;">
+        <div style="font-size: 11px; font-weight: 700; color: #D4603A;">Оценка по параметрам</div>
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; color: #6B5445; margin-bottom: 3px;"><span>Релевантность</span><span style="font-family: 'JetBrains Mono';">8/10</span></div>
+          <div class="mock-dim-bar" style="border-color: #5C4033; background: #F0E8E0;"><div class="mock-dim-fill" style="width: 80%; background: #D4603A;"></div></div>
+        </div>
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; color: #6B5445; margin-bottom: 3px;"><span>Структура</span><span style="font-family: 'JetBrains Mono';">6/10</span></div>
+          <div class="mock-dim-bar" style="border-color: #5C4033; background: #F0E8E0;"><div class="mock-dim-fill" style="width: 60%; background: #D97706;"></div></div>
+        </div>
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; color: #6B5445; margin-bottom: 3px;"><span>Достижения</span><span style="font-family: 'JetBrains Mono';">4/10</span></div>
+          <div class="mock-dim-bar" style="border-color: #5C4033; background: #F0E8E0;"><div class="mock-dim-fill" style="width: 40%; background: #DC2626;"></div></div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+        <span class="mock-skill-tag" style="border-color: #16a34a; color: #16a34a; background: rgba(22,163,74,0.06);">Python</span>
+        <span class="mock-skill-tag" style="border-color: #2563EB; color: #2563EB; background: rgba(37,99,235,0.06);">React</span>
+        <span class="mock-skill-tag" style="border-color: #D97706; color: #D97706; background: rgba(217,119,6,0.06);">SQL</span>
+        <span class="mock-skill-tag" style="border-color: #5C4033; color: #5C4033; background: rgba(92,64,51,0.04); border-style: dashed;">Docker</span>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <div class="mock-button" style="background: #D4603A; color: #fff; border-color: #5C4033; box-shadow: 3px 3px 0 #5C4033;">Подобрать роли</div>
+        <div class="mock-button" style="background: #FFF8F2; color: #2C1810; border-color: #5C4033; box-shadow: 3px 3px 0 #5C4033;">Сменить роль</div>
+      </div>
+
+      <div class="colors-strip">
+        <div class="color-dot" style="background: #FAF6F1;"></div>
+        <div class="color-dot" style="background: #FFF8F2;"></div>
+        <div class="color-dot" style="background: #F0E8E0;"></div>
+        <div class="color-dot" style="background: #D4603A;"></div>
+        <div class="color-dot" style="background: #5C4033;"></div>
+        <div class="color-dot" style="background: #2C1810;"></div>
+        <div class="color-dot" style="background: #22C55E;"></div>
+        <div class="color-dot" style="background: #D97706;"></div>
+      </div>
+    </div>
+
+    <!-- Dark -->
+    <div class="theme-panel" style="background: #1F1714; border: 2.5px solid #8B6952;">
+      <div class="theme-label" style="color: #8B6952;">Тёмная тема</div>
+
+      <div class="mock-header" style="background: rgba(31,23,20,0.95); border-color: #8B6952;">
+        <div class="mock-logo">
+          <div class="mock-logo-box" style="background: #D4603A; border-color: #8B6952; box-shadow: 2px 2px 0 rgba(0,0,0,0.4);">P</div>
+          <span class="mock-logo-text" style="color: #F0E0D4;">РЕЗЮМЭН</span>
+        </div>
+        <div class="mock-tabs" style="border-color: #8B6952;">
+          <div class="mock-tab" style="background: #D4603A; color: #fff; border-color: #8B6952;">Анализ</div>
+          <div class="mock-tab" style="background: #2A1F1A; color: #C4A68C; border-color: #8B6952;">Роли</div>
+          <div class="mock-tab" style="background: #2A1F1A; color: #C4A68C; border-color: #8B6952;">Переупаковка</div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 14px; align-items: center;">
+        <div class="mock-score" style="border-color: #34D399; box-shadow: 3px 3px 0 rgba(0,0,0,0.4); background: #2A1F1A; color: #34D399;">72</div>
+        <div style="flex: 1;">
+          <div style="font-size: 13px; font-weight: 700; color: #F0E0D4;">IT-специалист / разработчик</div>
+          <div style="display: flex; gap: 6px; margin-top: 6px;">
+            <span class="mock-pill" style="border-color: #EF4444; color: #F87171; background: rgba(239,68,68,0.1);">2 critical</span>
+            <span class="mock-pill" style="border-color: #F59E0B; color: #FBBF24; background: rgba(245,158,11,0.08);">3 major</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mock-card" style="border-color: #8B6952; box-shadow: 4px 4px 0 rgba(0,0,0,0.4); background: #2A1F1A;">
+        <div class="mock-section">
+          <div class="mock-section-title" style="color: #F0E0D4;">
+            <div class="mock-section-bar" style="background: #D4603A;"></div>
+            Опыт работы
+          </div>
+          <div class="mock-text" style="color: #C4A68C;">
+            Senior Developer в <span style="border-bottom: 3px solid #EF4444;">Яндексе</span> — занимался разработкой <span style="border-bottom: 3px solid #F59E0B;">микросервисов</span>.
+          </div>
+        </div>
+      </div>
+
+      <div class="mock-card" style="border-color: #8B6952; box-shadow: 4px 4px 0 rgba(0,0,0,0.4); background: #2A1F1A; display: flex; flex-direction: column; gap: 10px;">
+        <div style="font-size: 11px; font-weight: 700; color: #D4603A;">Оценка по параметрам</div>
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; color: #C4A68C; margin-bottom: 3px;"><span>Релевантность</span><span style="font-family: 'JetBrains Mono';">8/10</span></div>
+          <div class="mock-dim-bar" style="border-color: #8B6952; background: #1F1714;"><div class="mock-dim-fill" style="width: 80%; background: #D4603A;"></div></div>
+        </div>
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; color: #C4A68C; margin-bottom: 3px;"><span>Структура</span><span style="font-family: 'JetBrains Mono';">6/10</span></div>
+          <div class="mock-dim-bar" style="border-color: #8B6952; background: #1F1714;"><div class="mock-dim-fill" style="width: 60%; background: #FBBF24;"></div></div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+        <span class="mock-skill-tag" style="border-color: #34D399; color: #34D399; background: rgba(34,211,153,0.08);">Python</span>
+        <span class="mock-skill-tag" style="border-color: #60A5FA; color: #60A5FA; background: rgba(96,165,250,0.08);">React</span>
+        <span class="mock-skill-tag" style="border-color: #8B6952; color: #C4A68C; background: rgba(196,166,140,0.06); border-style: dashed;">Docker</span>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <div class="mock-button" style="background: #D4603A; color: #fff; border-color: #8B6952; box-shadow: 3px 3px 0 rgba(0,0,0,0.4);">Подобрать роли</div>
+        <div class="mock-button" style="background: #2A1F1A; color: #F0E0D4; border-color: #8B6952; box-shadow: 3px 3px 0 rgba(0,0,0,0.4);">Сменить роль</div>
+      </div>
+
+      <div class="colors-strip">
+        <div class="color-dot" style="background: #1F1714;"></div>
+        <div class="color-dot" style="background: #2A1F1A;"></div>
+        <div class="color-dot" style="background: #8B6952;"></div>
+        <div class="color-dot" style="background: #D4603A;"></div>
+        <div class="color-dot" style="background: #F0E0D4;"></div>
+        <div class="color-dot" style="background: #C4A68C;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- VARIANT 3: Midnight Teal -->
+<!-- ============================================ -->
+<div>
+  <div class="variant-title">
+    <span style="font-size: 28px;">3</span>
+    Midnight Teal — Полночный бирюзовый
+  </div>
+  <div class="variant-desc">
+    Холодная бирюзово-зелёная палитра. Светлая — чистая и свежая с минтовым оттенком. Тёмная — глубокий тёмно-бирюзовый с неоновыми акцентами. Ощущение: технологичный, свежий, современный.
+  </div>
+
+  <div class="themes-row">
+    <!-- Light -->
+    <div class="theme-panel" style="background: #F4FAFB; border: 2.5px solid #1A5C5A;">
+      <div class="theme-label" style="color: #1A5C5A;">Светлая тема</div>
+
+      <div class="mock-header" style="background: rgba(244,250,251,0.95); border-color: #1A5C5A;">
+        <div class="mock-logo">
+          <div class="mock-logo-box" style="background: #0D9488; border-color: #1A5C5A; box-shadow: 2px 2px 0 #1A5C5A;">P</div>
+          <span class="mock-logo-text" style="color: #0F2E2D;">РЕЗЮМЭН</span>
+        </div>
+        <div class="mock-tabs" style="border-color: #1A5C5A;">
+          <div class="mock-tab" style="background: #0D9488; color: #fff; border-color: #1A5C5A;">Анализ</div>
+          <div class="mock-tab" style="background: #FBFEFD; color: #1A5C5A; border-color: #1A5C5A;">Роли</div>
+          <div class="mock-tab" style="background: #FBFEFD; color: #1A5C5A; border-color: #1A5C5A;">Переупаковка</div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 14px; align-items: center;">
+        <div class="mock-score" style="border-color: #10B981; box-shadow: 3px 3px 0 #10B981; background: #FBFEFD; color: #10B981;">72</div>
+        <div style="flex: 1;">
+          <div style="font-size: 13px; font-weight: 700; color: #0F2E2D;">IT-специалист / разработчик</div>
+          <div style="display: flex; gap: 6px; margin-top: 6px;">
+            <span class="mock-pill" style="border-color: #E11D48; color: #E11D48; background: rgba(225,29,72,0.06);">2 critical</span>
+            <span class="mock-pill" style="border-color: #EA580C; color: #EA580C; background: rgba(234,88,12,0.06);">3 major</span>
+          </div>
+        </div>
+        <span class="mock-pill" style="font-family: 'JetBrains Mono'; border-color: #1A5C5A; background: rgba(26,92,90,0.05); color: #1A5C5A;">B+</span>
+      </div>
+
+      <div class="mock-card" style="border-color: #1A5C5A; box-shadow: 4px 4px 0 #1A5C5A; background: #FBFEFD;">
+        <div class="mock-section">
+          <div class="mock-section-title" style="color: #0F2E2D;">
+            <div class="mock-section-bar" style="background: #F97316;"></div>
+            Опыт работы
+          </div>
+          <div class="mock-text" style="color: #3A6B68;">
+            Senior Developer в <span style="border-bottom: 3px solid #E11D48;">Яндексе</span> — занимался разработкой <span style="border-bottom: 3px solid #EA580C;">микросервисов</span> и внутренних инструментов.
+          </div>
+        </div>
+      </div>
+
+      <div class="mock-card" style="border-color: #1A5C5A; box-shadow: 4px 4px 0 #1A5C5A; background: #FBFEFD; display: flex; flex-direction: column; gap: 10px;">
+        <div style="font-size: 11px; font-weight: 700; color: #0D9488;">Оценка по параметрам</div>
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; color: #3A6B68; margin-bottom: 3px;"><span>Релевантность</span><span style="font-family: 'JetBrains Mono';">8/10</span></div>
+          <div class="mock-dim-bar" style="border-color: #1A5C5A; background: #E6F5F4;"><div class="mock-dim-fill" style="width: 80%; background: #0D9488;"></div></div>
+        </div>
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; color: #3A6B68; margin-bottom: 3px;"><span>Структура</span><span style="font-family: 'JetBrains Mono';">6/10</span></div>
+          <div class="mock-dim-bar" style="border-color: #1A5C5A; background: #E6F5F4;"><div class="mock-dim-fill" style="width: 60%; background: #EA580C;"></div></div>
+        </div>
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; color: #3A6B68; margin-bottom: 3px;"><span>Достижения</span><span style="font-family: 'JetBrains Mono';">4/10</span></div>
+          <div class="mock-dim-bar" style="border-color: #1A5C5A; background: #E6F5F4;"><div class="mock-dim-fill" style="width: 40%; background: #E11D48;"></div></div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+        <span class="mock-skill-tag" style="border-color: #10B981; color: #059669; background: rgba(16,185,129,0.06);">Python</span>
+        <span class="mock-skill-tag" style="border-color: #6366F1; color: #4F46E5; background: rgba(99,102,241,0.06);">React</span>
+        <span class="mock-skill-tag" style="border-color: #EA580C; color: #EA580C; background: rgba(234,88,12,0.06);">SQL</span>
+        <span class="mock-skill-tag" style="border-color: #1A5C5A; color: #1A5C5A; background: rgba(26,92,90,0.04); border-style: dashed;">Docker</span>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <div class="mock-button" style="background: #0D9488; color: #fff; border-color: #1A5C5A; box-shadow: 3px 3px 0 #1A5C5A;">Подобрать роли</div>
+        <div class="mock-button" style="background: #FBFEFD; color: #0F2E2D; border-color: #1A5C5A; box-shadow: 3px 3px 0 #1A5C5A;">Сменить роль</div>
+      </div>
+
+      <div class="colors-strip">
+        <div class="color-dot" style="background: #F4FAFB;"></div>
+        <div class="color-dot" style="background: #FBFEFD;"></div>
+        <div class="color-dot" style="background: #E6F5F4;"></div>
+        <div class="color-dot" style="background: #0D9488;"></div>
+        <div class="color-dot" style="background: #1A5C5A;"></div>
+        <div class="color-dot" style="background: #0F2E2D;"></div>
+        <div class="color-dot" style="background: #F97316;"></div>
+        <div class="color-dot" style="background: #E11D48;"></div>
+      </div>
+    </div>
+
+    <!-- Dark -->
+    <div class="theme-panel" style="background: #0C1F1E; border: 2.5px solid #2DD4BF;">
+      <div class="theme-label" style="color: #2DD4BF;">Тёмная тема</div>
+
+      <div class="mock-header" style="background: rgba(12,31,30,0.95); border-color: #1A5C5A;">
+        <div class="mock-logo">
+          <div class="mock-logo-box" style="background: #0D9488; border-color: #1A5C5A; box-shadow: 2px 2px 0 rgba(0,0,0,0.5);">P</div>
+          <span class="mock-logo-text" style="color: #E0F2F1;">РЕЗЮМЭН</span>
+        </div>
+        <div class="mock-tabs" style="border-color: #1A5C5A;">
+          <div class="mock-tab" style="background: #14B8A6; color: #fff; border-color: #1A5C5A;">Анализ</div>
+          <div class="mock-tab" style="background: #132B2A; color: #5EEAD4; border-color: #1A5C5A;">Роли</div>
+          <div class="mock-tab" style="background: #132B2A; color: #5EEAD4; border-color: #1A5C5A;">Переупаковка</div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 14px; align-items: center;">
+        <div class="mock-score" style="border-color: #34D399; box-shadow: 3px 3px 0 rgba(0,0,0,0.5); background: #132B2A; color: #34D399;">72</div>
+        <div style="flex: 1;">
+          <div style="font-size: 13px; font-weight: 700; color: #E0F2F1;">IT-специалист / разработчик</div>
+          <div style="display: flex; gap: 6px; margin-top: 6px;">
+            <span class="mock-pill" style="border-color: #FB7185; color: #FB7185; background: rgba(251,113,133,0.1);">2 critical</span>
+            <span class="mock-pill" style="border-color: #FB923C; color: #FB923C; background: rgba(251,146,60,0.08);">3 major</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mock-card" style="border-color: #1A5C5A; box-shadow: 4px 4px 0 rgba(0,0,0,0.5); background: #132B2A;">
+        <div class="mock-section">
+          <div class="mock-section-title" style="color: #E0F2F1;">
+            <div class="mock-section-bar" style="background: #FB923C;"></div>
+            Опыт работы
+          </div>
+          <div class="mock-text" style="color: #7DC8C0;">
+            Senior Developer в <span style="border-bottom: 3px solid #FB7185;">Яндексе</span> — занимался разработкой <span style="border-bottom: 3px solid #FB923C;">микросервисов</span>.
+          </div>
+        </div>
+      </div>
+
+      <div class="mock-card" style="border-color: #1A5C5A; box-shadow: 4px 4px 0 rgba(0,0,0,0.5); background: #132B2A; display: flex; flex-direction: column; gap: 10px;">
+        <div style="font-size: 11px; font-weight: 700; color: #2DD4BF;">Оценка по параметрам</div>
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; color: #7DC8C0; margin-bottom: 3px;"><span>Релевантность</span><span style="font-family: 'JetBrains Mono';">8/10</span></div>
+          <div class="mock-dim-bar" style="border-color: #1A5C5A; background: #0C1F1E;"><div class="mock-dim-fill" style="width: 80%; background: #14B8A6;"></div></div>
+        </div>
+        <div>
+          <div style="display: flex; justify-content: space-between; font-size: 10px; font-weight: 600; color: #7DC8C0; margin-bottom: 3px;"><span>Структура</span><span style="font-family: 'JetBrains Mono';">6/10</span></div>
+          <div class="mock-dim-bar" style="border-color: #1A5C5A; background: #0C1F1E;"><div class="mock-dim-fill" style="width: 60%; background: #FB923C;"></div></div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+        <span class="mock-skill-tag" style="border-color: #34D399; color: #34D399; background: rgba(52,211,153,0.08);">Python</span>
+        <span class="mock-skill-tag" style="border-color: #818CF8; color: #818CF8; background: rgba(129,140,248,0.08);">React</span>
+        <span class="mock-skill-tag" style="border-color: #1A5C5A; color: #5EEAD4; background: rgba(94,234,212,0.06); border-style: dashed;">Docker</span>
+      </div>
+      <div style="display: flex; gap: 10px;">
+        <div class="mock-button" style="background: #14B8A6; color: #fff; border-color: #1A5C5A; box-shadow: 3px 3px 0 rgba(0,0,0,0.5);">Подобрать роли</div>
+        <div class="mock-button" style="background: #132B2A; color: #E0F2F1; border-color: #1A5C5A; box-shadow: 3px 3px 0 rgba(0,0,0,0.5);">Сменить роль</div>
+      </div>
+
+      <div class="colors-strip">
+        <div class="color-dot" style="background: #0C1F1E;"></div>
+        <div class="color-dot" style="background: #132B2A;"></div>
+        <div class="color-dot" style="background: #1A5C5A;"></div>
+        <div class="color-dot" style="background: #14B8A6;"></div>
+        <div class="color-dot" style="background: #2DD4BF;"></div>
+        <div class="color-dot" style="background: #E0F2F1;"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<div style="text-align: center; margin-top: 48px; padding: 24px; color: #888; font-size: 12px;">
+  РЕЗЮМЭН — выбери палитру, и я применю её на весь проект
+</div>
+
+</body>
+</html>
