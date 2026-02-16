@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Редактор резюме — User Flow</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Inter:wght@400;500;600;700;800&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --bg-card: #141414;
+    --bg-elevated: #1a1a1a;
+    --bg-secondary: #1e1e1e;
+    --text-primary: #f5f5f5;
+    --text-secondary: #c0c0c0;
+    --text-muted: #666;
+    --border-color: #333;
+    --border-subtle: #252525;
+    --accent: #FFD60A;
+    --accent-bg: rgba(255, 214, 10, 0.08);
+    --amber: #FFD60A;
+    --sky: #38BDF8;
+    --success: #4ADE80;
+    --critical: #F87171;
+    --violet: #A78BFA;
+    --radius-sm: 6px;
+    --radius-md: 10px;
+    --border-width: 2px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text-primary);
+    font-family: 'Inter', -apple-system, sans-serif;
+    padding: 40px 32px 80px;
+    max-width: 960px;
+    margin: 0 auto;
+  }
+
+  /* ---- Typography ---- */
+  h1 { font-size: 28px; font-weight: 800; letter-spacing: -1px; margin-bottom: 4px; }
+  h2 { font-size: 20px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 6px; }
+  h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .subtitle { font-size: 14px; color: var(--text-muted); margin-bottom: 24px; line-height: 1.5; }
+  .label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+
+  hr { border: none; border-top: 1px solid var(--border-subtle); margin: 48px 0; }
+
+  /* ---- Cards ---- */
+  .card {
+    background: var(--bg-card);
+    border: var(--border-width) solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+
+  /* ---- Chips/badges ---- */
+  .badge {
+    display: inline-block;
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 3px 10px;
+    border-radius: 999px;
+  }
+
+  .badge-violet { color: var(--violet); background: rgba(167,139,250,0.1); border: 1.5px solid var(--violet); }
+  .badge-amber { color: var(--amber); background: rgba(255,214,10,0.1); border: 1.5px solid var(--amber); }
+  .badge-sky { color: var(--sky); background: rgba(56,189,248,0.1); border: 1.5px solid var(--sky); }
+  .badge-success { color: var(--success); background: rgba(74,222,128,0.1); border: 1.5px solid var(--success); }
+  .badge-muted { color: var(--text-muted); background: var(--bg-secondary); border: 1.5px solid var(--border-color); }
+
+  /* ---- Flow ---- */
+  .flow { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; margin: 16px 0 24px; }
+  .flow-step { font-size: 11px; font-weight: 600; padding: 6px 12px; border-radius: var(--radius-sm); border: 1.5px solid; }
+  .flow-arrow { color: var(--text-muted); font-size: 13px; }
+
+  /* ---- Storyboard ---- */
+  .story { margin-bottom: 56px; }
+  .story-header {
+    display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+  }
+  .story-number {
+    width: 32px; height: 32px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 800; flex-shrink: 0;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .story-desc { font-size: 13px; color: var(--text-muted); line-height: 1.55; margin-bottom: 20px; }
+
+  /* ---- Mock UI elements ---- */
+  .mock-bullet {
+    display: flex; gap: 8px; line-height: 1.6; align-items: flex-start; padding: 4px 0;
+  }
+  .mock-num {
+    color: var(--text-muted); flex-shrink: 0; font-size: 12px; font-weight: 600;
+    font-family: 'JetBrains Mono', monospace; min-width: 18px; text-align: right;
+  }
+  .mock-text { font-size: 13px; color: var(--text-secondary); flex: 1; line-height: 1.6; }
+  .mock-text-primary { font-size: 13px; color: var(--text-primary); flex: 1; line-height: 1.6; }
+
+  .placeholder {
+    color: var(--amber); background: rgba(255,214,10,0.12); padding: 0 3px;
+    border-radius: 2px; border: 1px solid var(--amber);
+  }
+
+  /* Selection highlight */
+  .selection-mark {
+    background: rgba(167,139,250,0.25);
+    border-bottom: 2px solid var(--violet);
+    padding: 1px 0;
+  }
+
+  /* Floating toolbar */
+  .float-toolbar {
+    display: inline-flex; gap: 0; border-radius: var(--radius-sm);
+    border: var(--border-width) solid var(--border-color);
+    overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    background: var(--bg-elevated);
+  }
+  .float-btn {
+    font-size: 11px; font-weight: 700; padding: 6px 14px; border: none;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    background: var(--bg-elevated); color: var(--text-secondary);
+    border-right: 1px solid var(--border-color);
+  }
+  .float-btn:last-child { border-right: none; }
+  .float-btn.primary { background: var(--violet); color: #fff; }
+
+  /* Inline comment box */
+  .comment-box {
+    margin-top: 8px; padding: 12px 14px; border-radius: var(--radius-md);
+    background: rgba(167,139,250,0.06); border: 1.5px solid rgba(167,139,250,0.3);
+  }
+  .comment-input {
+    width: 100%; font-size: 12px; color: var(--text-primary);
+    background: var(--bg-secondary); border: 1.5px solid var(--border-color);
+    border-radius: var(--radius-sm); padding: 8px 10px; outline: none;
+    font-family: inherit; resize: none; transition: border-color 0.15s;
+  }
+  .comment-input:focus { border-color: var(--violet); box-shadow: 0 0 0 3px rgba(167,139,250,0.1); }
+  .comment-input::placeholder { color: var(--text-muted); }
+
+  .btn-sm {
+    font-size: 11px; font-weight: 700; padding: 5px 12px;
+    border-radius: var(--radius-sm); cursor: pointer; border: 1.5px solid;
+  }
+
+  /* Shimmer */
+  .shimmer { position: relative; overflow: hidden; }
+  .shimmer::after {
+    content: ''; position: absolute; inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(167,139,250,0.1), transparent);
+    animation: shimmer 1.5s infinite;
+  }
+  @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
+
+  /* Result diff */
+  .diff-old { font-size: 12px; color: var(--text-muted); text-decoration: line-through; line-height: 1.5; }
+  .diff-new { font-size: 12px; color: var(--text-primary); line-height: 1.5; font-weight: 500; }
+
+  /* Persona cards */
+  .persona-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 16px 0; }
+  .persona { padding: 16px; }
+  .persona-name { font-size: 12px; font-weight: 700; margin-bottom: 6px; }
+  .persona-desc { font-size: 11px; color: var(--text-secondary); line-height: 1.5; }
+  .persona-action { font-size: 11px; color: var(--text-muted); margin-top: 8px; font-style: italic; }
+
+  /* Section within mock UI */
+  .mock-section { padding: 18px 20px; }
+  .mock-header {
+    padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: var(--border-width) solid var(--border-subtle); background: var(--bg-elevated);
+  }
+
+  .annotation-dot {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    margin-right: 4px; vertical-align: middle;
+  }
+
+  /* Two-up comparison */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+  .compare > div { padding: 16px; }
+
+  /* User thought bubble */
+  .thought {
+    font-size: 12px; color: var(--text-muted); font-style: italic;
+    padding: 8px 14px; border-left: 3px solid var(--border-color);
+    margin: 12px 0; line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<!-- ==================== TITLE ==================== -->
+<h1>Редактор резюме</h1>
+<div class="subtitle">
+  Пользовательский флоу: от просмотра переписанного резюме до финального экспорта.<br>
+  Ключевая механика: <strong>выдели текст → скажи AI что хочешь → получи результат</strong>.
+</div>
+
+<!-- ==================== USER PERSONAS ==================== -->
+<div style="margin-bottom: 8px;">
+  <span class="label">Кто будет редактировать и зачем</span>
+</div>
+
+<div class="persona-grid">
+  <div class="card persona">
+    <div class="persona-name" style="color: var(--amber);">🟡 «Плейсхолдерщик»</div>
+    <div class="persona-desc">AI оставил <span class="placeholder">[уточнить: X]</span> — пользователь знает ответ, но не знает как красиво вписать.</div>
+    <div class="persona-action">→ Выделяет плейсхолдер, пишет «было 15 человек» → AI вписывает</div>
+  </div>
+  <div class="card persona">
+    <div class="persona-name" style="color: var(--violet);">🟣 «Контекстодатель»</div>
+    <div class="persona-desc">AI не знал деталей — команда была 30 человек, продукт вышел на 5 рынков, бюджет был $2M.</div>
+    <div class="persona-action">→ Выделяет фразу, пишет контекст → AI переписывает сильнее</div>
+  </div>
+  <div class="card persona">
+    <div class="persona-name" style="color: var(--sky);">🔵 «Перфекционист»</div>
+    <div class="persona-desc">Буллет ок, но хочет другую формулировку. Знает как именно — просто хочет поправить руками.</div>
+    <div class="persona-action">→ Кликает на буллет → редактирует как в текстовом документе</div>
+  </div>
+  <div class="card persona">
+    <div class="persona-name" style="color: var(--success);">🟢 «Переосмыслитель»</div>
+    <div class="persona-desc">Хочет перефреймить целый блок опыта: «подай это как продакт-менеджмент, а не разработку».</div>
+    <div class="persona-action">→ Инструкция на весь блок → AI переписывает все буллеты</div>
+  </div>
+</div>
+
+<hr>
+
+<!-- ==================== FLOW OVERVIEW ==================== -->
+<span class="label">Общий флоу</span>
+<div class="flow">
+  <span class="flow-step" style="border-color: var(--text-muted); color: var(--text-secondary);">Читает</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step" style="border-color: var(--amber); color: var(--amber);">Видит проблему</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step" style="border-color: var(--violet); color: var(--violet);">Выделяет текст</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step" style="border-color: var(--violet); color: var(--violet);">✏️ Руками / 🔄 AI</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step" style="border-color: var(--success); color: var(--success);">Принимает</span>
+  <span class="flow-arrow">→</span>
+  <span class="flow-step" style="border-color: var(--text-muted); color: var(--text-secondary);">Экспорт</span>
+</div>
+
+<div class="thought">
+  Ключевой инсайт: одна механика — <strong>выделение текста</strong> — покрывает все 4 персоны.<br>
+  Не нужны отдельные кнопки 🔄 на каждом буллете. Пользователь сам показывает ЧТО менять.
+</div>
+
+<hr>
+
+<!-- ==================== STORYBOARD ==================== -->
+<span class="label" style="margin-bottom: 32px; display: block;">Сторибоард по шагам</span>
+
+<!-- STEP 1 -->
+<div class="story">
+  <div class="story-header">
+    <div class="story-number" style="background: var(--bg-secondary); border: 2px solid var(--border-color); color: var(--text-secondary);">1</div>
+    <div>
+      <h2>Пользователь видит переписанное резюме</h2>
+      <span class="badge badge-muted">Без изменений</span>
+    </div>
+  </div>
+  <div class="story-desc">
+    Как сейчас: буллеты, подсказки ✨, кнопка ↩ для оригинала. Пользователь читает сверху вниз.
+    Единственное новое — <strong>подсказка</strong> «Выделите текст, чтобы отредактировать или попросить AI переписать».
+  </div>
+
+  <div class="card">
+    <div class="mock-header">
+      <div style="display: flex; align-items: flex-start; gap: 10px;">
+        <div style="width: 4px; height: 36px; border-radius: 2px; background: var(--amber); margin-top: 2px;"></div>
+        <div>
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 15px; font-weight: 800;">Ланит</span>
+            <span class="badge badge-amber" style="font-size: 8px;">3 совета AI</span>
+          </div>
+          <span style="font-size: 14px; font-weight: 600; color: var(--text-secondary);">Product Owner</span>
+        </div>
+      </div>
+      <span style="font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace;">2019 — 2023</span>
+    </div>
+    <div class="mock-section">
+      <div style="display: flex; flex-direction: column; gap: 4px;">
+        <div class="mock-bullet">
+          <span class="mock-num">1.</span>
+          <span class="mock-text">Спроектировала и внедрила систему Конфигуратор для автоматизации отчётности по XBRL, сократив время формирования отчётов на 40%</span>
+        </div>
+        <div class="mock-bullet">
+          <span class="mock-num">2.</span>
+          <span class="mock-text">Руководила командой из <span class="placeholder">[уточнить: кол-во]</span> разработчиков, обеспечивая выполнение спринтов и <span class="placeholder">[уточнить: метрику]</span></span>
+          <span class="badge badge-amber" style="font-size: 8px; flex-shrink: 0; align-self: center;">✨</span>
+        </div>
+        <div class="mock-bullet">
+          <span class="mock-num">3.</span>
+          <span class="mock-text">Провела миграцию legacy-системы на микросервисную архитектуру, снизив время деплоя с 2 часов до 15 минут</span>
+        </div>
+        <div class="mock-bullet">
+          <span class="mock-num">4.</span>
+          <span class="mock-text">Организовала процесс code review, повысив качество кода и сократив количество багов в продакшене</span>
+          <span class="badge badge-amber" style="font-size: 8px; flex-shrink: 0; align-self: center;">✨</span>
+        </div>
+      </div>
+
+      <!-- Onboarding hint -->
+      <div style="margin-top: 16px; padding: 10px 14px; border-radius: var(--radius-sm); background: rgba(167,139,250,0.06); border: 1px dashed rgba(167,139,250,0.3); text-align: center;">
+        <span style="font-size: 11px; color: var(--violet);">💡 Выделите любой текст, чтобы отредактировать или попросить AI переписать</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 2 -->
+<div class="story">
+  <div class="story-header">
+    <div class="story-number" style="background: rgba(167,139,250,0.1); border: 2px solid var(--violet); color: var(--violet);">2</div>
+    <div>
+      <h2>Выделяет текст → появляется тулбар</h2>
+      <span class="badge badge-violet">Новое</span>
+    </div>
+  </div>
+  <div class="story-desc">
+    Пользователь выделяет текст (слово, фразу, плейсхолдер, весь буллет — что угодно).
+    Над выделением появляется <strong>floating toolbar</strong> с двумя кнопками.
+  </div>
+
+  <div class="card">
+    <div class="mock-section">
+      <!-- Bullet 1 — normal -->
+      <div class="mock-bullet" style="margin-bottom: 4px;">
+        <span class="mock-num">1.</span>
+        <span class="mock-text">Спроектировала и внедрила систему Конфигуратор для автоматизации отчётности по XBRL, сократив время формирования отчётов на 40%</span>
+      </div>
+
+      <!-- Bullet 2 — with selection + floating toolbar -->
+      <div style="position: relative; margin-bottom: 4px;">
+        <div class="mock-bullet">
+          <span class="mock-num">2.</span>
+          <span class="mock-text">Руководила командой из <span class="selection-mark"><span class="placeholder" style="border-color: var(--violet);">[уточнить: кол-во]</span> разработчиков, обеспечивая выполнение спринтов и <span class="placeholder" style="border-color: var(--violet);">[уточнить: метрику]</span></span></span>
+        </div>
+
+        <!-- Floating toolbar — positioned above selection -->
+        <div style="position: absolute; top: -36px; left: 120px; z-index: 10;">
+          <div class="float-toolbar">
+            <button class="float-btn">✏️ Редактировать</button>
+            <button class="float-btn primary">🔄 Переписать с AI</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bullet 3 — normal -->
+      <div class="mock-bullet" style="margin-bottom: 4px;">
+        <span class="mock-num">3.</span>
+        <span class="mock-text">Провела миграцию legacy-системы на микросервисную архитектуру, снизив время деплоя с 2 часов до 15 минут</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="thought">
+    Тулбар появляется при <code>mouseup</code> / <code>touchend</code> если есть выделенный текст в зоне буллетов. Это стандартный паттерн — Notion, Medium, Google Docs.
+  </div>
+</div>
+
+<!-- STEP 3a -->
+<div class="story">
+  <div class="story-header">
+    <div class="story-number" style="background: rgba(167,139,250,0.1); border: 2px solid var(--violet); color: var(--violet);">3a</div>
+    <div>
+      <h2>Путь AI: ввод комментария</h2>
+      <span class="badge badge-violet">Новое</span>
+    </div>
+  </div>
+  <div class="story-desc">
+    Пользователь нажал «🔄 Переписать с AI». Под буллетом (или рядом с выделением) появляется поле ввода.
+    Пишет что хочет — дополнительный контекст, инструкцию, факты.
+  </div>
+
+  <div class="card">
+    <div class="mock-section">
+      <div class="mock-bullet" style="margin-bottom: 4px;">
+        <span class="mock-num">1.</span>
+        <span class="mock-text">Спроектировала и внедрила систему Конфигуратор для автоматизации отчётности по XBRL, сократив время формирования отчётов на 40%</span>
+      </div>
+
+      <!-- Bullet with comment box open -->
+      <div style="margin-bottom: 4px;">
+        <div class="mock-bullet">
+          <span class="mock-num" style="color: var(--violet);">2.</span>
+          <span class="mock-text" style="opacity: 0.5;">Руководила командой из <span class="selection-mark"><span class="placeholder" style="border-color: var(--violet);">[уточнить: кол-во]</span> разработчиков, обеспечивая выполнение спринтов и <span class="placeholder" style="border-color: var(--violet);">[уточнить: метрику]</span></span></span>
+        </div>
+
+        <div class="comment-box" style="margin-left: 26px;">
+          <div style="font-size: 11px; font-weight: 700; color: var(--violet); margin-bottom: 8px;">🔄 Переписать выделенный фрагмент</div>
+          <textarea class="comment-input" rows="2" placeholder="Что здесь должно быть?">команда 8 человек, выросла с 3 до 8 за год. делали по 2 релиза в неделю, 95% спринтов закрывали в срок</textarea>
+          <div style="display: flex; gap: 6px; margin-top: 8px; align-items: center;">
+            <button class="btn-sm" style="background: var(--violet); color: #fff; border-color: var(--violet);">⚡ Переписать</button>
+            <button class="btn-sm" style="background: transparent; color: var(--text-muted); border-color: var(--border-color);">Отмена</button>
+            <span style="font-size: 10px; color: var(--text-muted); margin-left: auto;">Enter — отправить</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="mock-bullet">
+        <span class="mock-num">3.</span>
+        <span class="mock-text">Провела миграцию legacy-системы на микросервисную архитектуру, снизив время деплоя с 2 часов до 15 минут</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top: 16px;">
+    <span class="label" style="margin-bottom: 8px; display: block;">Примеры что пишут разные персоны</span>
+    <div class="persona-grid">
+      <div class="card" style="padding: 12px; border-color: var(--amber);">
+        <div style="font-size: 10px; font-weight: 700; color: var(--amber); margin-bottom: 4px;">🟡 Плейсхолдерщик</div>
+        <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">«8 человек, 2 релиза в неделю»</div>
+      </div>
+      <div class="card" style="padding: 12px; border-color: var(--violet);">
+        <div style="font-size: 10px; font-weight: 700; color: var(--violet); margin-bottom: 4px;">🟣 Контекстодатель</div>
+        <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">«выросла с 3 до 8, я нанимал сам, это был мой первый управленческий опыт»</div>
+      </div>
+      <div class="card" style="padding: 12px; border-color: var(--sky);">
+        <div style="font-size: 10px; font-weight: 700; color: var(--sky); margin-bottom: 4px;">🔵 Перфекционист</div>
+        <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">«сделай короче и агрессивнее»</div>
+      </div>
+      <div class="card" style="padding: 12px; border-color: var(--success);">
+        <div style="font-size: 10px; font-weight: 700; color: var(--success); margin-bottom: 4px;">🟢 Переосмыслитель</div>
+        <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.4;">«подай как управление продуктом, а не тимлидство»</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 3b -->
+<div class="story">
+  <div class="story-header">
+    <div class="story-number" style="background: rgba(56,189,248,0.1); border: 2px solid var(--sky); color: var(--sky);">3b</div>
+    <div>
+      <h2>Путь «руками»: inline-редактирование</h2>
+      <span class="badge badge-sky">Новое</span>
+    </div>
+  </div>
+  <div class="story-desc">
+    Пользователь нажал «✏️ Редактировать». Весь буллет становится textarea — правит как хочет.
+  </div>
+
+  <div class="card">
+    <div class="mock-section">
+      <div class="mock-bullet" style="margin-bottom: 4px;">
+        <span class="mock-num">1.</span>
+        <span class="mock-text">Спроектировала и внедрила систему Конфигуратор для автоматизации отчётности по XBRL, сократив время формирования отчётов на 40%</span>
+      </div>
+
+      <div style="margin-bottom: 4px;">
+        <div class="mock-bullet">
+          <span class="mock-num" style="color: var(--sky);">2.</span>
+          <textarea style="
+            font-size: 13px; color: var(--text-primary); flex: 1; line-height: 1.6;
+            background: var(--bg-secondary); border: 1.5px solid var(--sky);
+            border-radius: var(--radius-sm); padding: 8px 10px; outline: none;
+            font-family: inherit; resize: vertical; min-height: 48px;
+            box-shadow: 0 0 0 3px rgba(56,189,248,0.1);
+          " rows="2">Руководила командой из 8 разработчиков (рост с 3 до 8 за год), обеспечивая 95% выполнение спринтов в срок и delivery 2 релизов в неделю</textarea>
+        </div>
+        <div style="display: flex; gap: 6px; margin-left: 26px; margin-top: 6px; align-items: center;">
+          <button class="btn-sm" style="background: var(--success); color: var(--bg); border-color: var(--success);">✓ Сохранить</button>
+          <button class="btn-sm" style="background: transparent; color: var(--text-muted); border-color: var(--border-color);">Отмена</button>
+          <span style="font-size: 10px; color: var(--text-muted); margin-left: auto;">Esc — отмена · ⌘Enter — сохранить</span>
+        </div>
+      </div>
+
+      <div class="mock-bullet">
+        <span class="mock-num">3.</span>
+        <span class="mock-text">Провела миграцию legacy-системы на микросервисную архитектуру, снизив время деплоя с 2 часов до 15 минут</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 4 -->
+<div class="story">
+  <div class="story-header">
+    <div class="story-number" style="background: rgba(255,214,10,0.1); border: 2px solid var(--amber); color: var(--amber);">4</div>
+    <div>
+      <h2>AI генерирует...</h2>
+      <span class="badge badge-amber">~2-3 сек</span>
+    </div>
+  </div>
+  <div class="story-desc">
+    Shimmer на выделенном фрагменте. Остальные буллеты не блокируются — можно читать дальше.
+  </div>
+
+  <div class="card">
+    <div class="mock-section">
+      <div class="mock-bullet" style="margin-bottom: 4px;">
+        <span class="mock-num">1.</span>
+        <span class="mock-text">Спроектировала и внедрила систему Конфигуратор для автоматизации отчётности по XBRL, сократив время формирования отчётов на 40%</span>
+      </div>
+
+      <div class="mock-bullet shimmer" style="margin-bottom: 4px; background: rgba(167,139,250,0.04); border-radius: var(--radius-sm); padding: 6px 8px; position: relative;">
+        <span class="mock-num" style="color: var(--violet);">2.</span>
+        <span class="mock-text" style="opacity: 0.35;">Руководила командой из [уточнить: кол-во] разработчиков, обеспечивая выполнение спринтов и [уточнить: метрику]</span>
+        <span style="font-size: 10px; color: var(--violet); font-weight: 600; flex-shrink: 0; align-self: center;">Генерирую...</span>
+      </div>
+
+      <div class="mock-bullet" style="margin-bottom: 4px;">
+        <span class="mock-num">3.</span>
+        <span class="mock-text">Провела миграцию legacy-системы на микросервисную архитектуру, снизив время деплоя с 2 часов до 15 минут</span>
+      </div>
+      <div class="mock-bullet">
+        <span class="mock-num">4.</span>
+        <span class="mock-text">Организовала процесс code review, повысив качество кода и сократив количество багов в продакшене</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- STEP 5 -->
+<div class="story">
+  <div class="story-header">
+    <div class="story-number" style="background: rgba(74,222,128,0.1); border: 2px solid var(--success); color: var(--success);">5</div>
+    <div>
+      <h2>Результат: принять / отклонить / ещё</h2>
+      <span class="badge badge-success">Новое</span>
+    </div>
+  </div>
+  <div class="story-desc">
+    AI вернул новый вариант. Показываем diff: старое зачёркнуто, новое подсвечено. Три действия.
+  </div>
+
+  <div class="card">
+    <div class="mock-section">
+      <div class="mock-bullet" style="margin-bottom: 4px;">
+        <span class="mock-num">1.</span>
+        <span class="mock-text">Спроектировала и внедрила систему Конфигуратор для автоматизации отчётности по XBRL, сократив время формирования отчётов на 40%</span>
+      </div>
+
+      <!-- Result inline -->
+      <div style="margin-bottom: 4px;">
+        <div class="mock-bullet">
+          <span class="mock-num" style="color: var(--success);">2.</span>
+          <span class="mock-text-primary">Руководила командой из 8 разработчиков (рост с 3 до 8 за год), обеспечивая delivery 2 релизов в неделю при 95% соблюдении сроков спринтов</span>
+        </div>
+
+        <!-- Diff panel -->
+        <div style="margin-left: 26px; margin-top: 6px; border-radius: var(--radius-md); overflow: hidden; border: 1.5px solid rgba(74,222,128,0.3);">
+          <div style="font-size: 10px; font-weight: 700; color: var(--success); padding: 8px 14px; background: rgba(74,222,128,0.06); border-bottom: 1px solid rgba(74,222,128,0.15); display: flex; justify-content: space-between;">
+            <span>✨ Новый вариант</span>
+            <span style="opacity: 0.6;">на основе вашего комментария</span>
+          </div>
+          <div style="padding: 10px 14px; background: rgba(74,222,128,0.03);">
+            <div class="diff-old">Руководила командой из [уточнить: кол-во] разработчиков, обеспечивая выполнение спринтов и [уточнить: метрику]</div>
+            <div class="diff-new" style="margin-top: 6px;">→ Руководила командой из 8 разработчиков (рост с 3 до 8 за год), обеспечивая delivery 2 релизов в неделю при 95% соблюдении сроков спринтов</div>
+          </div>
+          <div style="display: flex; gap: 6px; padding: 8px 14px; background: rgba(74,222,128,0.03); border-top: 1px solid rgba(74,222,128,0.1);">
+            <button class="btn-sm" style="background: var(--success); color: var(--bg); border-color: var(--success);">✓ Принять</button>
+            <button class="btn-sm" style="background: transparent; color: var(--text-muted); border-color: var(--border-color);">✕ Отклонить</button>
+            <button class="btn-sm" style="background: transparent; color: var(--violet); border-color: rgba(167,139,250,0.4);">🔄 Ещё вариант</button>
+            <button class="btn-sm" style="background: transparent; color: var(--sky); border-color: rgba(56,189,248,0.4); margin-left: auto;">✏️ Редактировать</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="mock-bullet" style="margin-bottom: 4px;">
+        <span class="mock-num">3.</span>
+        <span class="mock-text">Провела миграцию legacy-системы на микросервисную архитектуру, снизив время деплоя с 2 часов до 15 минут</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="thought">
+    «✏️ Редактировать» в diff-панели — позволяет принять вариант AI как отправную точку и допилить руками.
+    Это финальный штрих для перфекциониста.
+  </div>
+</div>
+
+<hr>
+
+<!-- ==================== EDGE CASES ==================== -->
+<span class="label" style="margin-bottom: 16px; display: block;">Краевые кейсы</span>
+
+<div class="compare">
+  <div class="card">
+    <h3 style="color: var(--amber); padding: 12px 14px 0;">Клик на плейсхолдер</h3>
+    <div style="padding: 4px 14px 14px; font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
+      Плейсхолдеры <span class="placeholder">[уточнить: X]</span> кликабельны.
+      Клик = сразу открывает панель AI с подсказкой «Что здесь должно быть?».
+      Пользователю не нужно выделять руками — самый быстрый путь для самого частого кейса.
+    </div>
+  </div>
+  <div class="card">
+    <h3 style="color: var(--sky); padding: 12px 14px 0;">Двойной клик на буллет</h3>
+    <div style="padding: 4px 14px 14px; font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
+      Двойной клик (без выделения) = inline-edit всего буллета.
+      Это shortcut для перфекциониста — не надо выделять весь текст, сразу textarea.
+    </div>
+  </div>
+  <div class="card">
+    <h3 style="color: var(--violet); padding: 12px 14px 0;">Выделение через несколько буллетов</h3>
+    <div style="padding: 4px 14px 14px; font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
+      Если выделено >1 буллета — тулбар показывает только «🔄 Переписать с AI» (без «Редактировать»).
+      Это путь для переосмыслителя — инструкция применяется ко всему выделенному.
+    </div>
+  </div>
+  <div class="card">
+    <h3 style="color: var(--success); padding: 12px 14px 0;">Совет ✨ + перегенерация</h3>
+    <div style="padding: 4px 14px 14px; font-size: 12px; color: var(--text-secondary); line-height: 1.5;">
+      Существующие хинты (✨ Совет) остаются как есть.
+      Но в поле комментария AI можно предзаполнить совет одним кликом: «Применить этот совет →».
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- ==================== SUMMARY TABLE ==================== -->
+<span class="label" style="margin-bottom: 16px; display: block;">Матрица: что нового</span>
+
+<table style="width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 24px;">
+  <tr style="border-bottom: 2px solid var(--border-color);">
+    <th style="text-align: left; padding: 10px; color: var(--text-muted); font-size: 10px; text-transform: uppercase;">Взаимодействие</th>
+    <th style="text-align: left; padding: 10px; color: var(--text-muted); font-size: 10px; text-transform: uppercase;">Триггер</th>
+    <th style="text-align: left; padding: 10px; color: var(--text-muted); font-size: 10px; text-transform: uppercase;">Фронт</th>
+    <th style="text-align: left; padding: 10px; color: var(--text-muted); font-size: 10px; text-transform: uppercase;">Бэкенд</th>
+    <th style="text-align: center; padding: 10px; color: var(--text-muted); font-size: 10px; text-transform: uppercase;">Приоритет</th>
+  </tr>
+  <tr style="border-bottom: 1px solid var(--border-subtle);">
+    <td style="padding: 10px; color: var(--text-secondary);">Клик на плейсхолдер → AI</td>
+    <td style="padding: 10px; color: var(--text-muted);">Клик на <span class="placeholder" style="font-size: 10px;">[X]</span></td>
+    <td style="padding: 10px; color: var(--text-muted);">Комментарий + замена</td>
+    <td style="padding: 10px;"><span class="badge badge-violet" style="font-size: 8px;">Новый эндпоинт</span></td>
+    <td style="padding: 10px; text-align: center;"><span style="color: var(--critical); font-weight: 700;">P0</span></td>
+  </tr>
+  <tr style="border-bottom: 1px solid var(--border-subtle);">
+    <td style="padding: 10px; color: var(--text-secondary);">Выделение → AI</td>
+    <td style="padding: 10px; color: var(--text-muted);">Выделить текст → тулбар</td>
+    <td style="padding: 10px; color: var(--text-muted);">Floating toolbar + комментарий</td>
+    <td style="padding: 10px;"><span class="badge badge-violet" style="font-size: 8px;">Тот же эндпоинт</span></td>
+    <td style="padding: 10px; text-align: center;"><span style="color: var(--critical); font-weight: 700;">P0</span></td>
+  </tr>
+  <tr style="border-bottom: 1px solid var(--border-subtle);">
+    <td style="padding: 10px; color: var(--text-secondary);">Двойной клик → редактирование</td>
+    <td style="padding: 10px; color: var(--text-muted);">Двойной клик на буллет</td>
+    <td style="padding: 10px; color: var(--text-muted);">Textarea, чисто фронт</td>
+    <td style="padding: 10px; color: var(--text-muted);">—</td>
+    <td style="padding: 10px; text-align: center;"><span style="color: var(--amber); font-weight: 700;">P0</span></td>
+  </tr>
+  <tr style="border-bottom: 1px solid var(--border-subtle);">
+    <td style="padding: 10px; color: var(--text-secondary);">Принять / Отклонить / Ещё</td>
+    <td style="padding: 10px; color: var(--text-muted);">После генерации</td>
+    <td style="padding: 10px; color: var(--text-muted);">Diff-панель</td>
+    <td style="padding: 10px; color: var(--text-muted);">—</td>
+    <td style="padding: 10px; text-align: center;"><span style="color: var(--critical); font-weight: 700;">P0</span></td>
+  </tr>
+  <tr style="border-bottom: 1px solid var(--border-subtle);">
+    <td style="padding: 10px; color: var(--text-secondary);">Совет ✨ → «Применить этот совет»</td>
+    <td style="padding: 10px; color: var(--text-muted);">Клик в хинт-панели</td>
+    <td style="padding: 10px; color: var(--text-muted);">Предзаполняет комментарий</td>
+    <td style="padding: 10px;"><span class="badge badge-violet" style="font-size: 8px;">Тот же эндпоинт</span></td>
+    <td style="padding: 10px; text-align: center;"><span style="color: var(--amber); font-weight: 700;">P1</span></td>
+  </tr>
+  <tr>
+    <td style="padding: 10px; color: var(--text-secondary);">Мульти-буллет выделение</td>
+    <td style="padding: 10px; color: var(--text-muted);">Выделить >1 буллета</td>
+    <td style="padding: 10px; color: var(--text-muted);">Тулбар (только AI)</td>
+    <td style="padding: 10px;"><span class="badge badge-violet" style="font-size: 8px;">Другой эндпоинт</span></td>
+    <td style="padding: 10px; text-align: center;"><span style="color: var(--text-muted); font-weight: 700;">P2</span></td>
+  </tr>
+</table>
+
+<!-- ==================== API ==================== -->
+<div class="card" style="padding: 16px; border-color: var(--violet);">
+  <div style="font-size: 11px; font-weight: 700; color: var(--violet); margin-bottom: 10px;">⚡ Один новый эндпоинт покрывает P0</div>
+  <div style="font-size: 12px; color: var(--text-secondary); line-height: 1.7; font-family: 'JetBrains Mono', monospace;">
+    POST /api/tasks/{id}/regenerate<br>
+    {<br>
+    &nbsp;&nbsp;block_id: 2,<br>
+    &nbsp;&nbsp;bullet_index: 1,&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span style="color: var(--text-muted);">// какой буллет</span><br>
+    &nbsp;&nbsp;selected_text: "[уточнить: кол-во] разработчиков...",<br>
+    &nbsp;&nbsp;user_comment: "команда 8 человек, выросла с 3 до 8",<br>
+    &nbsp;&nbsp;full_bullet: "Руководила командой из...",<br>
+    &nbsp;&nbsp;role: "Product Owner"<br>
+    }<br>
+    → { new_text: "Руководила командой из 8 разработчиков..." }
+  </div>
+</div>
+
+</body>
+</html>

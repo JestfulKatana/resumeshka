@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import type { ParseResult, ScoringResult, Severity } from '../../types/analysis';
+import { gradeFromScore } from '../../types/analysis';
 import { useAnimatedScore } from '../../hooks/useAnimatedScore';
 import AnnotatedText from './AnnotatedText';
 import SeverityCounter from './SeverityCounter';
@@ -13,6 +14,12 @@ interface AnalysisPanelProps {
 const sectionColors = ['var(--nb-amber)', 'var(--nb-coral)', 'var(--nb-sky)', 'var(--nb-mint)'];
 
 const gradeConfig: Record<string, { color: string; bg: string }> = {
+  'Отличное резюме': { color: 'var(--nb-success)', bg: 'color-mix(in srgb, var(--nb-success) 12%, transparent)' },
+  'Хорошее резюме': { color: 'var(--nb-success)', bg: 'color-mix(in srgb, var(--nb-success) 12%, transparent)' },
+  'Неплохая база': { color: 'var(--nb-amber)', bg: 'color-mix(in srgb, var(--nb-amber) 12%, transparent)' },
+  'Есть над чем поработать': { color: 'var(--nb-major)', bg: 'color-mix(in srgb, var(--nb-major) 12%, transparent)' },
+  'Нужна серьёзная доработка': { color: 'var(--nb-critical)', bg: 'color-mix(in srgb, var(--nb-critical) 12%, transparent)' },
+  // legacy fallbacks
   'Отличное': { color: 'var(--nb-success)', bg: 'color-mix(in srgb, var(--nb-success) 12%, transparent)' },
   'Хорошее': { color: 'var(--nb-success)', bg: 'color-mix(in srgb, var(--nb-success) 12%, transparent)' },
   'Нужна полировка': { color: 'var(--nb-major)', bg: 'color-mix(in srgb, var(--nb-major) 12%, transparent)' },
@@ -139,7 +146,8 @@ function ScoreSkeleton() {
 }
 
 export default function AnalysisPanel({ parse, scoring, isAnnotating }: AnalysisPanelProps) {
-  const gc = scoring ? (gradeConfig[scoring.grade] || gradeConfig['Нужна переработка']) : null;
+  const displayGrade = scoring ? gradeFromScore(scoring.total_score) : null;
+  const gc = displayGrade ? (gradeConfig[displayGrade] || gradeConfig['Есть над чем поработать']) : null;
 
   return (
     <div style={{ animation: 'fadeIn 0.3s ease' }}>
@@ -168,7 +176,7 @@ export default function AnalysisPanel({ parse, scoring, isAnnotating }: Analysis
                   background: gc!.bg,
                 }}
               >
-                {scoring.grade}
+                {displayGrade}
               </span>
             </div>
 

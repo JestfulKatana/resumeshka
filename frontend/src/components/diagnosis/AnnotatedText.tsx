@@ -113,7 +113,7 @@ function Tooltip({ annotation, rect, onClose }: { annotation: Annotation; rect: 
   );
 }
 
-export default function AnnotatedText({ text, annotations, blockId }: AnnotatedTextProps) {
+export default function AnnotatedText({ text, annotations, blockId: _blockId }: AnnotatedTextProps) {
   const [tooltip, setTooltip] = useState<TooltipData | null>(null);
 
   // Build segments from annotations mapping original_text to positions in text

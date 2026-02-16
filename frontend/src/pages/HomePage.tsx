@@ -77,8 +77,8 @@ export default function HomePage() {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '120px 24px' }}>
         <StepProgress messages={[
-          'Загружаю файл...',
-          'Извлекаю текст из резюме...',
+          'Читаю ваше резюме...',
+          'Извлекаю текст...',
           'Разбиваю на секции...',
         ]} />
       </div>
@@ -100,7 +100,7 @@ export default function HomePage() {
           marginBottom: 16, lineHeight: 1.1,
           color: 'var(--text-primary)',
         }}>
-          РЕЗЮМЭН
+          РЕЗЮМЕШКА
         </h1>
         <p style={{
           fontSize: 18, fontWeight: 500,
@@ -108,14 +108,27 @@ export default function HomePage() {
           maxWidth: 420, margin: '0 auto 8px',
           lineHeight: 1.4,
         }}>
-          Покажи мне своё резюме —{'\n'}и я скажу, кто ты
+          Загрузи резюме — получи готовое под вакансию
         </p>
         <p style={{
           fontSize: 13,
           color: 'var(--text-muted)',
+          marginBottom: 20,
         }}>
-          AI-скринер резюме с характером
+          Проверим, переупакуем, отправишь
         </p>
+
+        {/* 3 steps */}
+        <div style={{
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          gap: 8, fontSize: 13, color: 'var(--text-secondary)', fontWeight: 500,
+        }}>
+          <span>📋 Анализ за 30 сек</span>
+          <span style={{ color: 'var(--text-muted)' }}>→</span>
+          <span>🎯 Подбор ролей</span>
+          <span style={{ color: 'var(--text-muted)' }}>→</span>
+          <span>📄 Готовое резюме</span>
+        </div>
       </div>
 
       {/* AI disclaimer */}
@@ -130,9 +143,8 @@ export default function HomePage() {
       }}>
         <span style={{ fontSize: 18, flexShrink: 0 }}>&#x26A0;&#xFE0F;</span>
         <span style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-          Резюме обрабатывается с помощью AI (Claude). Не&nbsp;отправляйте
-          паспортные данные, адрес, ИНН и другую чувствительную информацию.
-          Вы можете вставить текст резюме вручную, убрав лишнее.
+          Резюме анализирует AI. Не&nbsp;загружайте паспортные данные, ИНН и адрес.
+          Можно вставить текст вручную, убрав личное.
         </span>
       </div>
 

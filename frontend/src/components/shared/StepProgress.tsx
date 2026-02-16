@@ -48,7 +48,7 @@ export default function StepProgress({ messages, intervalMs = 2800 }: StepProgre
         color: '#fff',
         animation: 'wiggle 2s ease-in-out infinite',
       }}>
-        P
+        R
       </div>
 
       {/* Speech bubble */}

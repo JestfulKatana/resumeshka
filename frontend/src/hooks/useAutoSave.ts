@@ -15,7 +15,7 @@ interface SavedState {
 
 export function useAutoSave(state: PipelineState) {
   const [lastSaved, setLastSaved] = useState<number | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Debounced save on every meaningful state change
   useEffect(() => {

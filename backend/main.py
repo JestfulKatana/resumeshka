@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from auth import get_current_user, verify_telegram_auth
-from llm import run_annotate, run_parse, run_recheck, run_rewrite, run_roles, run_scoring
+from llm import run_annotate, run_parse, run_recheck, run_regenerate_bullet, run_rewrite, run_roles, run_scoring
 from parsers import parse_file
 from storage import storage
 
@@ -31,6 +31,15 @@ ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt"}
 
 class RewriteRequest(BaseModel):
     selectedRole: str
+
+
+class RegenerateRequest(BaseModel):
+    block_id: int
+    bullet_index: int
+    selected_text: str
+    user_comment: str
+    full_bullet: str
+    role: str
 
 
 class RecheckRequest(BaseModel):
@@ -314,6 +323,34 @@ async def rewrite(task_id: str, body: RewriteRequest):
         raise HTTPException(500, f"LLM error: {e}")
 
     storage.update_task(task_id, selected_role=body.selectedRole, rewrite=result)
+    return result
+
+
+# ---------------------------------------------------------------------------
+# POST /api/tasks/{taskId}/regenerate — regenerate a single bullet with AI
+# ---------------------------------------------------------------------------
+
+@app.post("/api/tasks/{task_id}/regenerate")
+async def regenerate(task_id: str, body: RegenerateRequest):
+    task = storage.get_task(task_id)
+    if task is None:
+        raise HTTPException(404, "Task not found")
+
+    gender = "male"
+    if task["parse_result"]:
+        gender = task["parse_result"].get("gender", "male")
+
+    try:
+        result = await run_regenerate_bullet(
+            full_bullet=body.full_bullet,
+            selected_text=body.selected_text,
+            user_comment=body.user_comment,
+            role=body.role,
+            gender=gender,
+        )
+    except Exception as e:
+        raise HTTPException(500, f"LLM error: {e}")
+
     return result
 
 

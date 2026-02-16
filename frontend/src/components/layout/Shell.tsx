@@ -104,7 +104,7 @@ export default function Shell({ children }: { children: ReactNode }) {
               fontWeight: 900,
             }}
           >
-            P
+            R
           </div>
           <div>
             <div
@@ -116,7 +116,7 @@ export default function Shell({ children }: { children: ReactNode }) {
                 color: 'var(--text-primary)',
               }}
             >
-              РЕЗЮМЭН
+              РЕЗЮМЕШКА
             </div>
             <div
               style={{
@@ -127,7 +127,7 @@ export default function Shell({ children }: { children: ReactNode }) {
                 textTransform: 'uppercase',
               }}
             >
-              AI-скринер резюме
+              AI-помощник по резюме
             </div>
           </div>
         </a>

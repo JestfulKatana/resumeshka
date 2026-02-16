@@ -24,6 +24,20 @@ export const mockClient: ApiClient = {
     };
   },
 
+  async analyzeText(_text) {
+    await randomDelay(800, 1500);
+    counter++;
+    return {
+      taskId: `task-${counter}-${Date.now().toString(36)}`,
+      parse: mockParseOnly,
+    };
+  },
+
+  async parse(_taskId) {
+    await randomDelay(500, 1000);
+    return mockDiagnosis;
+  },
+
   async getTask(_taskId) {
     await randomDelay(200, 400);
     return {
@@ -53,6 +67,11 @@ export const mockClient: ApiClient = {
   async rewrite(_taskId, _selectedRole) {
     await randomDelay(1500, 2500);
     return mockRewrite;
+  },
+
+  async regenerate(_taskId, _req) {
+    await randomDelay(800, 1500);
+    return { new_bullet: '[Мок] Переписанный буллет с учётом вашего комментария' };
   },
 
   async recheck(_taskId, _updatedResume) {

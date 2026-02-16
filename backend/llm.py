@@ -15,6 +15,8 @@ from prompts import (
     RECHECK_SCHEMA,
     RECHECK_SYSTEM,
     RECHECK_USER_TEMPLATE,
+    REGENERATE_BULLET_SCHEMA,
+    REGENERATE_BULLET_SYSTEM,
     REWRITE_BLOCK_SCHEMA,
     REWRITE_BLOCK_SYSTEM,
     REWRITE_META_SCHEMA,
@@ -208,10 +210,25 @@ async def run_parse(resume_text: str) -> dict:
 
 
 async def run_scoring(resume_text: str) -> dict:
-    """Run scoring: 10 dimensions, total_score, grade, verdict."""
-    return await call_claude(
+    """Run scoring: 10 dimensions + server-computed total_score and grade."""
+    result = await call_claude(
         SCORING_SYSTEM, resume_text, SCORING_SCHEMA, "scoring"
     )
+    # Compute total_score from dimensions (model tends to hallucinate a fixed number)
+    total = sum(d.get("score", 0) for d in result.get("dimensions", []))
+    result["total_score"] = total
+    # Derive grade from score
+    if total >= 85:
+        result["grade"] = "Отличное резюме"
+    elif total >= 70:
+        result["grade"] = "Хорошее резюме"
+    elif total >= 55:
+        result["grade"] = "Неплохая база"
+    elif total >= 35:
+        result["grade"] = "Есть над чем поработать"
+    else:
+        result["grade"] = "Нужна серьёзная доработка"
+    return result
 
 
 async def _annotate_section(section: dict, resume_text: str) -> dict:
@@ -287,7 +304,15 @@ async def run_roles(resume_text: str, analysis: dict, key_skills: dict | None = 
             "text": analysis_part,
         },
     ]
-    return await call_claude(ROLES_SYSTEM, user_blocks, ROLES_SCHEMA, "roles")
+    result = await call_claude(ROLES_SYSTEM, user_blocks, ROLES_SCHEMA, "roles")
+
+    # Safety: ensure recommendation exists (model may omit it)
+    if "recommendation" not in result or not result["recommendation"]:
+        roles = result.get("roles", [])
+        best = roles[0]["role"] if roles else ""
+        result["recommendation"] = {"primary_role": best, "reasoning": ""}
+
+    return result
 
 
 async def _rewrite_block(
@@ -483,6 +508,31 @@ async def run_rewrite(
         "skills": meta["skills"],
         "recommendations": meta["recommendations"],
     }
+
+
+async def run_regenerate_bullet(
+    full_bullet: str,
+    selected_text: str,
+    user_comment: str,
+    role: str,
+    gender: str = "male",
+) -> dict:
+    """Regenerate a single bullet based on user's selection and comment."""
+    gender_label = "женский" if gender == "female" else "мужской"
+    user_msg = (
+        f"Целевая роль: {role}\n"
+        f"Пол кандидата: {gender_label}\n\n"
+        f"Полный буллет:\n{full_bullet}\n\n"
+        f"Выделенный фрагмент:\n{selected_text}\n\n"
+        f"Комментарий пользователя:\n{user_comment}"
+    )
+    return await call_claude(
+        REGENERATE_BULLET_SYSTEM,
+        user_msg,
+        REGENERATE_BULLET_SCHEMA,
+        "regenerate_bullet",
+        max_tokens=1024,
+    )
 
 
 async def run_recheck(

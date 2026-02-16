@@ -8,11 +8,26 @@ export type ResumeType =
   | 'Нормальный';
 
 export type Grade =
+  | 'Отличное резюме'
+  | 'Хорошее резюме'
+  | 'Неплохая база'
+  | 'Есть над чем поработать'
+  | 'Нужна серьёзная доработка'
+  // legacy grades (LLM may still return these)
   | 'Отличное'
   | 'Хорошее'
   | 'Нужна полировка'
   | 'Нужна переработка'
   | 'Полная переделка';
+
+/** Compute grade label from score (authoritative, matches backend logic) */
+export function gradeFromScore(score: number): Grade {
+  if (score >= 85) return 'Отличное резюме';
+  if (score >= 70) return 'Хорошее резюме';
+  if (score >= 55) return 'Неплохая база';
+  if (score >= 35) return 'Есть над чем поработать';
+  return 'Нужна серьёзная доработка';
+}
 
 export interface RedFlag {
   flag: string;

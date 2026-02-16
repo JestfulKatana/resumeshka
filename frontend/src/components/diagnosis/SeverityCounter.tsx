@@ -1,9 +1,9 @@
 import type { Severity } from '../../types/analysis';
 
 const config: Record<Severity, { color: string; bg: string; label: string }> = {
-  critical: { color: 'var(--nb-critical)', bg: 'color-mix(in srgb, var(--nb-critical) 10%, transparent)', label: 'критично' },
-  major: { color: 'var(--nb-major)', bg: 'color-mix(in srgb, var(--nb-major) 10%, transparent)', label: 'важно' },
-  minor: { color: 'var(--nb-minor)', bg: 'color-mix(in srgb, var(--nb-minor) 10%, transparent)', label: 'мелочь' },
+  critical: { color: 'var(--nb-critical)', bg: 'color-mix(in srgb, var(--nb-critical) 10%, transparent)', label: 'критичных' },
+  major: { color: 'var(--nb-major)', bg: 'color-mix(in srgb, var(--nb-major) 10%, transparent)', label: 'важных' },
+  minor: { color: 'var(--nb-minor)', bg: 'color-mix(in srgb, var(--nb-minor) 10%, transparent)', label: 'мелких' },
 };
 
 interface SeverityCounterProps {

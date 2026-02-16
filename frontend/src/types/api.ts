@@ -26,6 +26,19 @@ export interface AnnotateResponse {
   sections: Section[];
 }
 
+export interface RegenerateRequest {
+  block_id: number;
+  bullet_index: number;
+  selected_text: string;
+  user_comment: string;
+  full_bullet: string;
+  role: string;
+}
+
+export interface RegenerateResponse {
+  new_bullet: string;
+}
+
 export interface ApiClient {
   analyze(file: File): Promise<AnalyzeResponse>;
   analyzeText(text: string): Promise<AnalyzeTextResponse>;
@@ -36,4 +49,5 @@ export interface ApiClient {
   getRoles(taskId: string): Promise<RolesResult>;
   rewrite(taskId: string, selectedRole: string): Promise<RewriteResult>;
   recheck(taskId: string, updatedResume: string): Promise<RecheckResult>;
+  regenerate(taskId: string, req: RegenerateRequest): Promise<RegenerateResponse>;
 }

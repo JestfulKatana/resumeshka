@@ -91,6 +91,19 @@ function reducer(state: PipelineState, action: PipelineAction): PipelineState {
       return { ...state, step: 'rechecking', error: null };
     case 'RECHECK_LOADED':
       return { ...state, step: 'done', rechecks: [...state.rechecks, action.data] };
+    case 'UPDATE_BULLET': {
+      if (!state.rewrite) return state;
+      const updatedExperiences = state.rewrite.experiences.map((exp) => {
+        if (exp.block_id !== action.blockId) return exp;
+        const bullets = [...exp.rewritten_bullets];
+        bullets[action.bulletIndex] = action.newText;
+        return { ...exp, rewritten_bullets: bullets };
+      });
+      const updatedRewrite = { ...state.rewrite, experiences: updatedExperiences };
+      const updatedCache = { ...state.rewriteCache };
+      if (state.selectedRole) updatedCache[state.selectedRole] = updatedRewrite;
+      return { ...state, rewrite: updatedRewrite, rewriteCache: updatedCache };
+    }
     case 'CHANGE_ROLE':
       return {
         ...state,
@@ -114,15 +127,21 @@ function reducer(state: PipelineState, action: PipelineAction): PipelineState {
       // Determine the correct step from saved data
       let step: PipelineState['step'] = 'idle';
       if (s.rewrite) step = 'done';
-      else if (s.selectedRole) step = 'rewriting';
       else if (s.roles) step = 'awaiting_role';
       else if (s.parse && s.scoring) step = 'annotated';
       else if (s.parse) step = 'parsed';
 
+      // Only trust saved step if it's a stable state — transient loading
+      // states can't be restored because the async call is gone after reload
+      const stableSteps = new Set(['parsed', 'annotated', 'awaiting_role', 'done']);
+      const finalStep = s.step && stableSteps.has(s.step) ? s.step : step;
+
       return {
         ...initialState,
         ...s,
-        step: s.step && s.step !== 'uploading' && s.step !== 'error' ? s.step : step,
+        step: finalStep,
+        // Don't restore mid-rewrite selection (no active rewrite call)
+        selectedRole: s.rewrite ? (s.selectedRole ?? null) : null,
         rewriteCache: s.rewriteCache || {},
         rechecks: s.rechecks || [],
         versions: s.versions || [],
@@ -234,6 +253,7 @@ export function usePipeline() {
     try {
       const rewrite = await api.rewrite(state.taskId, role);
       dispatch({ type: 'REWRITE_LOADED', data: rewrite });
+      updateHistoryEntry(state.taskId, { hasRewrite: true });
     } catch (err) {
       dispatch({ type: 'SET_ERROR', error: err instanceof Error ? err.message : 'Unknown error' });
     }
@@ -267,11 +287,15 @@ export function usePipeline() {
     dispatch({ type: 'SAVE_VERSION', version });
   }, [state.selectedRole, state.versions.length]);
 
+  const updateBullet = useCallback((blockId: number, bulletIndex: number, newText: string) => {
+    dispatch({ type: 'UPDATE_BULLET', blockId, bulletIndex, newText });
+  }, []);
+
   const restore = useCallback((saved: Partial<PipelineState>) => {
     dispatch({ type: 'RESTORE', saved });
   }, []);
 
   const reset = useCallback(() => dispatch({ type: 'RESET' }), []);
 
-  return { state, startAnalysis, fetchRoles, selectRole, submitRecheck, changeRole, saveVersion, restore, reset };
+  return { state, startAnalysis, fetchRoles, selectRole, submitRecheck, changeRole, saveVersion, updateBullet, restore, reset };
 }

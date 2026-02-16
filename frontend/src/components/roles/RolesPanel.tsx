@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import type { RolesResult, MatchLevel } from '../../types/roles';
 import GaugeRing from './GaugeRing';
 
@@ -14,16 +14,16 @@ const matchColors: Record<MatchLevel, string> = {
   'с натяжкой': 'var(--nb-critical)',
 };
 
-const pluralMatches = (n: number) => {
-  if (n === 1) return '1 совпадение';
-  if (n >= 2 && n <= 4) return `${n} совпадения`;
-  return `${n} совпадений`;
+const pluralStrengths = (n: number) => {
+  if (n === 1) return '1 сильная сторона';
+  if (n >= 2 && n <= 4) return `${n} сильные стороны`;
+  return `${n} сильных сторон`;
 };
 
-const pluralGaps = (n: number) => {
-  if (n === 1) return '1 пробел';
-  if (n >= 2 && n <= 4) return `${n} пробела`;
-  return `${n} пробелов`;
+const pluralGrowth = (n: number) => {
+  if (n === 1) return '1 зона роста';
+  if (n >= 2 && n <= 4) return `${n} зоны роста`;
+  return `${n} зон роста`;
 };
 
 function useIsMobile(breakpoint = 768) {
@@ -167,22 +167,131 @@ const sectionLabel: React.CSSProperties = {
   marginBottom: 10,
 };
 
+/** Max strengths shown in compact mode */
+const COMPACT_STRENGTHS = 3;
+
+function CustomRoleInput({ onSelectRole }: { onSelectRole: (role: string) => void }) {
+  const [value, setValue] = useState('');
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleSubmit = () => {
+    const trimmed = value.trim();
+    if (trimmed) onSelectRole(trimmed);
+  };
+
+  return (
+    <div
+      className="nb-card-static"
+      style={{ marginTop: 20, overflow: 'hidden' }}
+    >
+      <div
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          padding: '14px 18px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          cursor: 'pointer',
+          background: 'var(--bg-elevated)',
+        }}
+      >
+        <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-secondary)' }}>
+          Не нашли свою роль?
+        </span>
+        <span
+          style={{
+            fontSize: 12,
+            color: 'var(--text-muted)',
+            transition: 'transform 0.2s',
+            transform: isOpen ? 'rotate(180deg)' : 'rotate(0)',
+          }}
+        >
+          ▾
+        </span>
+      </div>
+      {isOpen && (
+        <div style={{ padding: '14px 18px', animation: 'fadeIn 0.15s ease' }}>
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', margin: '0 0 12px', lineHeight: 1.5 }}>
+            Укажите должность или вставьте название вакансии — мы переупакуем резюме под неё.
+          </p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <input
+              type="text"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
+              placeholder="Например: Product Manager, Аналитик данных..."
+              className="nb-input"
+              style={{
+                flex: 1,
+                fontSize: 13,
+                padding: '10px 14px',
+              }}
+            />
+            <button
+              onClick={handleSubmit}
+              disabled={!value.trim()}
+              className="nb-button nb-button-primary"
+              style={{
+                flexShrink: 0,
+                opacity: value.trim() ? 1 : 0.4,
+                cursor: value.trim() ? 'pointer' : 'default',
+              }}
+            >
+              Переупаковать →
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function RolesPanel({ data, onSelectRole, selectedRole }: RolesPanelProps) {
-  const primaryRole = data.recommendation.primary_role;
+  const primaryRole = data.recommendation?.primary_role ?? data.roles[0]?.role ?? '';
   const isMobile = useIsMobile();
+
+  // Sort roles by match_score descending
+  const sortedRoles = useMemo(
+    () => [...data.roles].sort((a, b) => b.match_score - a.match_score),
+    [data.roles],
+  );
+
+  // Determine if the AI recommendation differs from the highest-score role
+  const highestScoreRole = sortedRoles[0]?.role;
+  const aiRecDiffersFromBest = primaryRole !== highestScoreRole;
+
   const [selectedIdx, setSelectedIdx] = useState<number>(() => {
-    const idx = data.roles.findIndex((r) => r.role === (selectedRole || primaryRole));
+    const idx = sortedRoles.findIndex((r) => r.role === (selectedRole || primaryRole));
     return idx >= 0 ? idx : 0;
   });
 
   const [hoveredCol, setHoveredCol] = useState<number | null>(null);
 
-  const cols = data.roles.length;
-  const selectedRoleName = data.roles[selectedIdx]?.role;
+  // Desktop compact/expand state — all collapsed by default
+  const [expandedCols, setExpandedCols] = useState<Set<number>>(new Set());
+
+  const toggleExpand = (i: number) => {
+    setExpandedCols((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) {
+        next.delete(i);
+      } else {
+        next.add(i);
+      }
+      return next;
+    });
+  };
+
+  const cols = sortedRoles.length;
+  const selectedRoleName = sortedRoles[selectedIdx]?.role;
   const alreadyRewritten = selectedRole === selectedRoleName;
 
+  // Check if ANY column is expanded (to know if detail rows should render)
+  const anyExpanded = expandedCols.size > 0;
+
   if (isMobile) {
-    const role = data.roles[selectedIdx];
+    const role = sortedRoles[selectedIdx];
     const color = matchColors[role.match_level];
     return (
       <div style={{ animation: 'fadeIn 0.3s ease' }}>
@@ -196,9 +305,10 @@ export default function RolesPanel({ data, onSelectRole, selectedRole }: RolesPa
             WebkitOverflowScrolling: 'touch',
           }}
         >
-          {data.roles.map((r, i) => {
+          {sortedRoles.map((r, i) => {
             const isSel = i === selectedIdx;
-            const isRec = r.role === primaryRole;
+            const isBest = i === 0;
+            const isAiRec = aiRecDiffersFromBest && r.role === primaryRole;
             const c = matchColors[r.match_level];
             return (
               <button
@@ -217,7 +327,7 @@ export default function RolesPanel({ data, onSelectRole, selectedRole }: RolesPa
                   borderColor: isSel ? 'var(--accent)' : 'var(--border-color)',
                 }}
               >
-                {isRec && (
+                {isBest && (
                   <div
                     style={{
                       fontSize: 8,
@@ -228,8 +338,25 @@ export default function RolesPanel({ data, onSelectRole, selectedRole }: RolesPa
                       marginBottom: 6,
                     }}
                   >
-                    Лучшее
+                    ⭐ Лучший
                   </div>
+                )}
+                {isAiRec && (
+                  <div
+                    style={{
+                      fontSize: 8,
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px',
+                      color: 'var(--nb-amber)',
+                      marginBottom: 6,
+                    }}
+                  >
+                    ⭐ AI
+                  </div>
+                )}
+                {!isBest && !isAiRec && (
+                  <div style={{ height: 0, marginBottom: 0 }} />
                 )}
                 <div
                   style={{
@@ -283,21 +410,21 @@ export default function RolesPanel({ data, onSelectRole, selectedRole }: RolesPa
           <div style={{ padding: '16px 16px' }}>
             {/* Strengths */}
             <div style={{ marginBottom: 18 }}>
-              <div style={sectionLabel}>Сильные стороны</div>
-              <span style={countBadge('str')}>+ {pluralMatches(role.strengths.length)}</span>
+              <div style={sectionLabel}>Ваши сильные стороны</div>
+              <span style={countBadge('str')}>+ {pluralStrengths(role.strengths.length)}</span>
               <BulletList items={role.strengths} color="var(--nb-success)" />
             </div>
 
             {/* Gaps */}
             <div style={{ marginBottom: 18 }}>
-              <div style={sectionLabel}>Пробелы</div>
-              <span style={countBadge('gap')}>{pluralGaps(role.gaps.length)}</span>
+              <div style={sectionLabel}>Что стоит подтянуть</div>
+              <span style={countBadge('gap')}>{pluralGrowth(role.gaps.length)}</span>
               <BulletList items={role.gaps} color="var(--nb-coral)" />
             </div>
 
             {/* Duties */}
             <div style={{ marginBottom: 18 }}>
-              <div style={sectionLabel}>Обязанности</div>
+              <div style={sectionLabel}>Типичные задачи роли</div>
               <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
                 {role.typical_duties}
               </div>
@@ -381,11 +508,14 @@ export default function RolesPanel({ data, onSelectRole, selectedRole }: RolesPa
                   textAlign: 'center',
                 }}
               >
-                Переупаковать под эту роль
+                Переупаковать под эту роль →
               </button>
             )}
           </div>
         </div>
+
+        {/* Custom role */}
+        <CustomRoleInput onSelectRole={onSelectRole} />
       </div>
     );
   }
@@ -409,10 +539,11 @@ export default function RolesPanel({ data, onSelectRole, selectedRole }: RolesPa
           background: 'var(--bg-elevated)',
         }}
       />
-      {data.roles.map((role, i) => {
+      {sortedRoles.map((role, i) => {
         const isSel = i === selectedIdx;
         const isHov = hoveredCol === i;
-        const isRec = role.role === primaryRole;
+        const isBest = i === 0;
+        const isAiRec = aiRecDiffersFromBest && role.role === primaryRole;
         const color = matchColors[role.match_level];
         return (
           <div
@@ -444,30 +575,51 @@ export default function RolesPanel({ data, onSelectRole, selectedRole }: RolesPa
                 }}
               />
             )}
-            {isRec ? (
-              <Tooltip text={data.recommendation.reasoning}>
-                <div
-                  style={{
-                    display: 'inline-block',
-                    fontSize: 9,
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.6px',
-                    color: 'var(--accent)',
-                    background: 'var(--accent-bg)',
-                    border: '2px solid var(--accent-border)',
-                    padding: '2px 8px',
-                    borderRadius: 999,
-                    marginBottom: 14,
-                    cursor: 'help',
-                  }}
-                >
-                  Лучшее совпадение
-                </div>
-              </Tooltip>
-            ) : (
-              <div style={{ height: 21, marginBottom: 14 }} />
-            )}
+            {/* Badges area */}
+            <div style={{ minHeight: 21, marginBottom: 14, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              {isBest && (
+                <Tooltip text={!aiRecDiffersFromBest ? data.recommendation?.reasoning ?? '' : 'Наивысший балл совпадения'}>
+                  <div
+                    style={{
+                      display: 'inline-block',
+                      fontSize: 9,
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.6px',
+                      color: 'var(--accent)',
+                      background: 'var(--accent-bg)',
+                      border: '2px solid var(--accent-border)',
+                      padding: '2px 8px',
+                      borderRadius: 999,
+                      cursor: 'help',
+                    }}
+                  >
+                    ⭐ Лучший вариант
+                  </div>
+                </Tooltip>
+              )}
+              {isAiRec && (
+                <Tooltip text={data.recommendation?.reasoning ?? ''}>
+                  <div
+                    style={{
+                      display: 'inline-block',
+                      fontSize: 9,
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.6px',
+                      color: 'var(--nb-amber)',
+                      background: 'color-mix(in srgb, var(--nb-amber) 10%, transparent)',
+                      border: '2px solid var(--nb-amber)',
+                      padding: '2px 8px',
+                      borderRadius: 999,
+                      cursor: 'help',
+                    }}
+                  >
+                    ⭐ Рекомендация AI
+                  </div>
+                </Tooltip>
+              )}
+            </div>
             <GaugeRing score={role.match_score} color={color} />
             <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', lineHeight: 1.35 }}>
               {role.role}
@@ -476,93 +628,257 @@ export default function RolesPanel({ data, onSelectRole, selectedRole }: RolesPa
         );
       })}
 
-      {/* STRENGTHS ROW */}
-      <div style={rowLabel()}>Сильные стороны</div>
-      {data.roles.map((role, i) => (
+      {/* COMPACT STRENGTHS ROW — always visible, max 3 items */}
+      <div style={rowLabel()}>Ваши сильные стороны</div>
+      {sortedRoles.map((role, i) => (
         <div key={role.role} style={cell(i === selectedIdx, hoveredCol === i)} onMouseEnter={() => setHoveredCol(i)} onMouseLeave={() => setHoveredCol(null)}>
-          <span style={countBadge('str')}>+ {pluralMatches(role.strengths.length)}</span>
-          <BulletList items={role.strengths} color="var(--nb-success)" />
+          <span style={countBadge('str')}>+ {pluralStrengths(role.strengths.length)}</span>
+          <BulletList items={role.strengths.slice(0, COMPACT_STRENGTHS)} color="var(--nb-success)" />
         </div>
       ))}
 
-      {/* GAPS ROW */}
-      <div style={rowLabel()}>Пробелы</div>
-      {data.roles.map((role, i) => (
-        <div key={role.role} style={cell(i === selectedIdx, hoveredCol === i)} onMouseEnter={() => setHoveredCol(i)} onMouseLeave={() => setHoveredCol(null)}>
-          <span style={countBadge('gap')}>{pluralGaps(role.gaps.length)}</span>
-          <BulletList items={role.gaps} color="var(--nb-coral)" />
-        </div>
-      ))}
-
-      {/* DUTIES ROW */}
-      <div style={rowLabel()}>Обязанности</div>
-      {data.roles.map((role, i) => (
-        <div key={role.role} style={cell(i === selectedIdx, hoveredCol === i)} onMouseEnter={() => setHoveredCol(i)} onMouseLeave={() => setHoveredCol(null)}>
-          <div style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
-            {role.typical_duties}
-          </div>
-        </div>
-      ))}
-
-      {/* SKILLS ROW */}
-      <div style={rowLabel()}>Навыки</div>
-      {data.roles.map((role, i) => {
-        const isSel = i === selectedIdx;
+      {/* TOGGLE ROW — "Подробнее ▾" / "Свернуть ▴" */}
+      <div
+        style={{
+          borderBottom: 'var(--nb-border-width) solid var(--border-subtle)',
+          borderRight: 'var(--nb-border-width) solid var(--border-subtle)',
+          background: 'var(--bg-elevated)',
+        }}
+      />
+      {sortedRoles.map((role, i) => {
+        const isExpanded = expandedCols.has(i);
         return (
-          <div key={role.role} style={cell(isSel, hoveredCol === i)} onMouseEnter={() => setHoveredCol(i)} onMouseLeave={() => setHoveredCol(null)}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-              {role.matched_skills.map((t) => (
-                <span
-                  key={t}
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 600,
-                    color: 'var(--nb-success)',
-                    background: 'color-mix(in srgb, var(--nb-success) 10%, transparent)',
-                    border: '2px solid var(--nb-success)',
-                    padding: '3px 8px',
-                    borderRadius: 999,
-                  }}
-                >
-                  {t}
-                </span>
-              ))}
-              {role.missing_skills.map((t) => (
-                <span
-                  key={t}
-                  style={{
-                    fontSize: 10,
-                    fontWeight: 600,
-                    color: 'var(--text-muted)',
-                    background: 'var(--bg-elevated)',
-                    border: '2px dashed var(--border-subtle)',
-                    padding: '3px 8px',
-                    borderRadius: 999,
-                  }}
-                >
-                  {t}
-                </span>
-              ))}
-            </div>
+          <div
+            key={role.role}
+            style={{
+              padding: '8px 18px',
+              borderBottom: 'var(--nb-border-width) solid var(--border-subtle)',
+              borderRight: i < cols - 1 ? 'var(--nb-border-width) solid var(--border-subtle)' : 'none',
+              textAlign: 'center',
+              transition: 'background 0.25s',
+              background: i === selectedIdx
+                ? 'var(--accent-bg)'
+                : hoveredCol === i
+                  ? 'var(--bg-card-hover)'
+                  : 'transparent',
+            }}
+            onMouseEnter={() => setHoveredCol(i)}
+            onMouseLeave={() => setHoveredCol(null)}
+          >
+            <button
+              onClick={(e) => { e.stopPropagation(); toggleExpand(i); }}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: 11,
+                fontWeight: 600,
+                color: 'var(--accent)',
+                padding: '2px 8px',
+                fontFamily: 'inherit',
+              }}
+            >
+              {isExpanded ? 'Свернуть \u25B4' : 'Подробнее \u25BE'}
+            </button>
           </div>
         );
       })}
 
-      {/* TEAM ROW */}
-      <div style={rowLabel(true)}>В команде</div>
-      {data.roles.map((role, i) => (
-        <div key={role.role} style={cell(i === selectedIdx, hoveredCol === i, true)} onMouseEnter={() => setHoveredCol(i)} onMouseLeave={() => setHoveredCol(null)}>
-          <div style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
-            <span style={{ color: 'var(--accent)', fontWeight: 600 }}>↑</span> {role.reports_to}
-            <br />
-            <span style={{ color: 'var(--accent)', fontWeight: 600 }}>↔</span> {role.works_with}
+      {/* EXPANDED DETAIL ROWS — only rendered for columns that are expanded */}
+      {/* We render the full grid rows but hide content in collapsed columns */}
+
+      {/* REMAINING STRENGTHS ROW (items beyond first 3) */}
+      {anyExpanded && (
+        <>
+          <div style={{
+            ...rowLabel(),
+            visibility: 'hidden',
+            fontSize: 0,
+            padding: '0 16px',
+          }}>
+            {/* empty label — strengths label already shown above */}
           </div>
-        </div>
-      ))}
+          {sortedRoles.map((role, i) => {
+            const isExpanded = expandedCols.has(i);
+            const remaining = role.strengths.slice(COMPACT_STRENGTHS);
+            if (!isExpanded || remaining.length === 0) {
+              return (
+                <div
+                  key={role.role}
+                  style={{
+                    ...cell(i === selectedIdx, hoveredCol === i),
+                    padding: isExpanded ? '0 18px' : '0',
+                    height: isExpanded ? 'auto' : 0,
+                    overflow: 'hidden',
+                    borderBottom: isExpanded
+                      ? 'var(--nb-border-width) solid var(--border-subtle)'
+                      : 'none',
+                  }}
+                  onMouseEnter={() => setHoveredCol(i)}
+                  onMouseLeave={() => setHoveredCol(null)}
+                />
+              );
+            }
+            return (
+              <div
+                key={role.role}
+                style={cell(i === selectedIdx, hoveredCol === i)}
+                onMouseEnter={() => setHoveredCol(i)}
+                onMouseLeave={() => setHoveredCol(null)}
+              >
+                <BulletList items={remaining} color="var(--nb-success)" />
+              </div>
+            );
+          })}
+        </>
+      )}
+
+      {/* GAPS ROW */}
+      {anyExpanded && (
+        <>
+          <div style={rowLabel()}>Что стоит подтянуть</div>
+          {sortedRoles.map((role, i) => {
+            const isExpanded = expandedCols.has(i);
+            return (
+              <div
+                key={role.role}
+                style={{
+                  ...cell(i === selectedIdx, hoveredCol === i),
+                  ...(isExpanded ? {} : { padding: '14px 18px' }),
+                }}
+                onMouseEnter={() => setHoveredCol(i)}
+                onMouseLeave={() => setHoveredCol(null)}
+              >
+                {isExpanded && (
+                  <>
+                    <span style={countBadge('gap')}>{pluralGrowth(role.gaps.length)}</span>
+                    <BulletList items={role.gaps} color="var(--nb-coral)" />
+                  </>
+                )}
+              </div>
+            );
+          })}
+        </>
+      )}
+
+      {/* DUTIES ROW */}
+      {anyExpanded && (
+        <>
+          <div style={rowLabel()}>Типичные задачи роли</div>
+          {sortedRoles.map((role, i) => {
+            const isExpanded = expandedCols.has(i);
+            return (
+              <div
+                key={role.role}
+                style={{
+                  ...cell(i === selectedIdx, hoveredCol === i),
+                  ...(isExpanded ? {} : { padding: '14px 18px' }),
+                }}
+                onMouseEnter={() => setHoveredCol(i)}
+                onMouseLeave={() => setHoveredCol(null)}
+              >
+                {isExpanded && (
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.5 }}>
+                    {role.typical_duties}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </>
+      )}
+
+      {/* SKILLS ROW */}
+      {anyExpanded && (
+        <>
+          <div style={rowLabel()}>Навыки</div>
+          {sortedRoles.map((role, i) => {
+            const isSel = i === selectedIdx;
+            const isExpanded = expandedCols.has(i);
+            return (
+              <div
+                key={role.role}
+                style={{
+                  ...cell(isSel, hoveredCol === i),
+                  ...(isExpanded ? {} : { padding: '14px 18px' }),
+                }}
+                onMouseEnter={() => setHoveredCol(i)}
+                onMouseLeave={() => setHoveredCol(null)}
+              >
+                {isExpanded && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {role.matched_skills.map((t) => (
+                      <span
+                        key={t}
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 600,
+                          color: 'var(--nb-success)',
+                          background: 'color-mix(in srgb, var(--nb-success) 10%, transparent)',
+                          border: '2px solid var(--nb-success)',
+                          padding: '3px 8px',
+                          borderRadius: 999,
+                        }}
+                      >
+                        {t}
+                      </span>
+                    ))}
+                    {role.missing_skills.map((t) => (
+                      <span
+                        key={t}
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 600,
+                          color: 'var(--text-muted)',
+                          background: 'var(--bg-elevated)',
+                          border: '2px dashed var(--border-subtle)',
+                          padding: '3px 8px',
+                          borderRadius: 999,
+                        }}
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </>
+      )}
+
+      {/* TEAM ROW */}
+      {anyExpanded && (
+        <>
+          <div style={rowLabel(true)}>В команде</div>
+          {sortedRoles.map((role, i) => {
+            const isExpanded = expandedCols.has(i);
+            return (
+              <div
+                key={role.role}
+                style={{
+                  ...cell(i === selectedIdx, hoveredCol === i, true),
+                  ...(isExpanded ? {} : { padding: '14px 18px' }),
+                }}
+                onMouseEnter={() => setHoveredCol(i)}
+                onMouseLeave={() => setHoveredCol(null)}
+              >
+                {isExpanded && (
+                  <div style={{ fontSize: 11, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+                    <span style={{ color: 'var(--accent)', fontWeight: 600 }}>↑</span> {role.reports_to}
+                    <br />
+                    <span style={{ color: 'var(--accent)', fontWeight: 600 }}>↔</span> {role.works_with}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </>
+      )}
 
       {/* ACTION ROW */}
       <div style={{ borderRight: 'var(--nb-border-width) solid var(--border-subtle)', background: 'var(--bg-elevated)' }} />
-      {data.roles.map((role, i) => {
+      {sortedRoles.map((role, i) => {
         const isSel = i === selectedIdx;
         return (
           <div key={role.role} style={{ padding: '16px 18px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -591,7 +907,7 @@ export default function RolesPanel({ data, onSelectRole, selectedRole }: RolesPa
                   fontSize: 12,
                 }}
               >
-                Переупаковать под эту роль
+                Переупаковать под эту роль →
               </button>
             ) : (
               <button
@@ -609,6 +925,11 @@ export default function RolesPanel({ data, onSelectRole, selectedRole }: RolesPa
           </div>
         );
       })}
+
+      {/* Custom role — below the grid, full width */}
+      <div style={{ gridColumn: '1 / -1' }}>
+        <CustomRoleInput onSelectRole={onSelectRole} />
+      </div>
     </div>
   );
 }

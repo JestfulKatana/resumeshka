@@ -23,7 +23,7 @@ export default function HistoryList({ entries, onDelete }: HistoryListProps) {
           marginBottom: 14,
         }}
       >
-        История проверок
+        Мои резюме
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -100,11 +100,26 @@ export default function HistoryList({ entries, onDelete }: HistoryListProps) {
                 >
                   {entry.fileName}
                 </div>
-                {entry.resumeType && (
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)', marginTop: 1 }}>
-                    {entry.resumeType}
-                  </div>
-                )}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 1 }}>
+                  {entry.resumeType && (
+                    <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+                      {entry.resumeType}
+                    </span>
+                  )}
+                  {entry.hasRewrite && (
+                    <span style={{
+                      fontSize: 9,
+                      fontWeight: 700,
+                      color: 'var(--nb-success)',
+                      background: 'color-mix(in srgb, var(--nb-success) 10%, transparent)',
+                      border: '1.5px solid var(--nb-success)',
+                      padding: '1px 6px',
+                      borderRadius: 999,
+                    }}>
+                      Переупаковано ✓
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* Date */}

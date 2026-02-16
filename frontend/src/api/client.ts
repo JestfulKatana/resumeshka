@@ -1,4 +1,4 @@
-import type { ApiClient, AnalyzeResponse, AnalyzeTextResponse, TaskResponse, AnnotateResponse } from '../types/api';
+import type { ApiClient, AnalyzeResponse, AnalyzeTextResponse, TaskResponse, AnnotateResponse, RegenerateRequest, RegenerateResponse } from '../types/api';
 import type { ParseResult } from '../types/analysis';
 import type { ScoringResult } from '../types/analysis';
 import type { RolesResult } from '../types/roles';
@@ -71,6 +71,14 @@ export const httpClient: ApiClient = {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ updatedResume }),
+    });
+  },
+
+  async regenerate(taskId: string, req: RegenerateRequest): Promise<RegenerateResponse> {
+    return request<RegenerateResponse>(`/api/tasks/${taskId}/regenerate`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(req),
     });
   },
 };

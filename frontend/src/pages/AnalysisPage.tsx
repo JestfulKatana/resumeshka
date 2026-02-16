@@ -3,6 +3,7 @@ import { useParams, useLocation } from 'react-router-dom';
 import { usePipeline } from '../hooks/usePipeline';
 import { useAutoSave } from '../hooks/useAutoSave';
 import type { Severity } from '../types/analysis';
+import { gradeFromScore } from '../types/analysis';
 import Spinner from '../components/shared/Spinner';
 import StepProgress from '../components/shared/StepProgress';
 import SeverityCounter from '../components/diagnosis/SeverityCounter';
@@ -16,15 +17,16 @@ type Tab = 'analysis' | 'roles' | 'rewrite' | 'recheck';
 interface TabDef {
   id: Tab;
   label: string;
+  icon: string;
   available: boolean;
+  completed: boolean;
+  locked: boolean;
 }
-
-const analysisSteps = new Set(['parsed', 'scoring', 'scored', 'annotating', 'annotated']);
 
 export default function AnalysisPage() {
   const { taskId } = useParams<{ taskId: string }>();
   const location = useLocation();
-  const { state, startAnalysis, fetchRoles, selectRole, submitRecheck, changeRole, restore } = usePipeline();
+  const { state, startAnalysis, fetchRoles, selectRole, submitRecheck, changeRole, updateBullet, restore } = usePipeline();
   const { lastSaved, loadSaved } = useAutoSave(state);
   const [activeTab, setActiveTab] = useState<Tab>('analysis');
   const [isLoaded, setIsLoaded] = useState(false);
@@ -108,11 +110,15 @@ export default function AnalysisPage() {
   const isAnnotating = state.step === 'annotating' || state.step === 'scoring' || state.step === 'scored';
   const isAnalysisComplete = hasParse && hasScoring && state.step === 'annotated';
 
+  const hasRoles = !!state.roles || state.step === 'loading_roles';
+  const hasRewrite = !!state.rewrite || state.step === 'rewriting';
+  const hasRecheck = state.rechecks.length > 0 || state.step === 'rechecking';
+
   const tabs: TabDef[] = [
-    { id: 'analysis', label: 'Анализ', available: hasParse },
-    { id: 'roles', label: 'Роли', available: !!state.roles || state.step === 'loading_roles' },
-    { id: 'rewrite', label: 'Переупаковка', available: !!state.rewrite || state.step === 'rewriting' },
-    { id: 'recheck', label: 'Перепроверка', available: state.rechecks.length > 0 || state.step === 'rechecking' },
+    { id: 'analysis', label: 'Анализ', icon: '📋', available: hasParse, completed: isAnalysisComplete || hasRoles, locked: false },
+    { id: 'roles', label: 'Роли', icon: '🎯', available: hasRoles, completed: hasRewrite, locked: !hasRoles },
+    { id: 'rewrite', label: 'Редактор', icon: '✏️', available: hasRewrite, completed: hasRecheck, locked: !hasRewrite },
+    { id: 'recheck', label: 'Проверка', icon: '✅', available: true, completed: state.rechecks.length > 0 && state.step === 'done', locked: !hasRecheck },
   ];
 
   const isInitialLoading = state.step === 'uploading' && !hasParse;
@@ -120,15 +126,15 @@ export default function AnalysisPage() {
   // Step status text
   const stepStatus = (() => {
     switch (state.step) {
-      case 'uploading': return 'Загрузка...';
+      case 'uploading': return 'Читаю ваше резюме...';
       case 'parsed':
-      case 'scoring': return 'Оценка резюме...';
+      case 'scoring': return 'Оцениваю по 10 параметрам...';
       case 'scored':
-      case 'annotating': return 'Анализ секций...';
-      case 'loading_roles': return 'Подбор ролей...';
+      case 'annotating': return 'Нахожу что можно улучшить...';
+      case 'loading_roles': return 'Подбираю подходящие роли...';
       case 'awaiting_role': return 'Выберите роль';
-      case 'rewriting': return 'Переупаковка...';
-      case 'rechecking': return 'Повторная проверка...';
+      case 'rewriting': return 'Переписываю под выбранную роль...';
+      case 'rechecking': return 'Проверяю изменения...';
       default: return null;
     }
   })();
@@ -159,7 +165,7 @@ export default function AnalysisPage() {
           height: 52,
         }}
       >
-        {/* Tab bar — neo-brutalist segmented control */}
+        {/* Tab bar — neo-brutalist segmented control with icons & progress */}
         <div style={{
           display: 'flex',
           gap: 0,
@@ -168,26 +174,32 @@ export default function AnalysisPage() {
           overflow: 'hidden',
           boxShadow: 'var(--shadow-sm)',
         }}>
-          {tabs.filter((t) => t.available).map((tab, i, arr) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              style={{
-                padding: '6px 18px',
-                fontSize: 13,
-                fontWeight: 700,
-                border: 'none',
-                borderRight: i < arr.length - 1 ? `var(--nb-border-width) solid var(--border-color)` : 'none',
-                cursor: 'pointer',
-                background: activeTab === tab.id ? 'var(--accent)' : 'var(--bg-card)',
-                color: activeTab === tab.id ? 'var(--text-on-accent)' : 'var(--text-secondary)',
-                transition: 'all 0.15s',
-                borderRadius: 0,
-              }}
-            >
-              {tab.label}
-            </button>
-          ))}
+          {tabs.map((tab, i, arr) => {
+            const isActive = activeTab === tab.id;
+            const isClickable = tab.available && !tab.locked;
+            const statusIcon = tab.locked ? ' 🔒' : tab.completed ? ' ✓' : isActive ? ' ●' : '';
+            return (
+              <button
+                key={tab.id}
+                onClick={() => isClickable && setActiveTab(tab.id)}
+                style={{
+                  padding: '6px 14px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  border: 'none',
+                  borderRight: i < arr.length - 1 ? `var(--nb-border-width) solid var(--border-color)` : 'none',
+                  cursor: isClickable ? 'pointer' : 'default',
+                  background: isActive ? 'var(--accent)' : 'var(--bg-card)',
+                  color: isActive ? 'var(--text-on-accent)' : tab.locked ? 'var(--text-muted)' : 'var(--text-secondary)',
+                  transition: 'all 0.15s',
+                  borderRadius: 0,
+                  opacity: tab.locked ? 0.5 : 1,
+                }}
+              >
+                {tab.icon} {tab.label}{statusIcon}
+              </button>
+            );
+          })}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -272,7 +284,7 @@ export default function AnalysisPage() {
             </div>
 
             {/* Grade badge — bordered pill */}
-            {hasScoring && state.scoring!.grade && (
+            {hasScoring && (
               <span
                 className="nb-pill"
                 style={{
@@ -281,7 +293,7 @@ export default function AnalysisPage() {
                   textTransform: 'uppercase',
                 }}
               >
-                {state.scoring!.grade}
+                {gradeFromScore(state.scoring!.total_score)}
               </span>
             )}
           </div>
@@ -308,8 +320,8 @@ export default function AnalysisPage() {
         {/* Initial loading (before parse arrives) */}
         {isInitialLoading && (
           <StepProgress messages={[
-            'Загружаю файл...',
-            'Извлекаю текст из резюме...',
+            'Читаю ваше резюме...',
+            'Извлекаю текст...',
             'Разбиваю на секции...',
           ]} />
         )}
@@ -356,15 +368,16 @@ export default function AnalysisPage() {
             'Анализирую навыки из резюме...',
             'Сверяю с рынком вакансий...',
             'Оцениваю совпадение опыта...',
+            'Готово! Проверьте и выберите ↓',
           ]} />
         )}
         {activeTab === 'rewrite' && state.step === 'rewriting' && !state.rewrite && (
           <StepProgress messages={[
-            'Переупаковываю резюме...',
-            'Адаптирую формулировки под роль...',
+            'Переписываю под выбранную роль...',
+            'Адаптирую формулировки...',
             'Усиливаю ключевые достижения...',
             'Подбираю правильные акценты...',
-            'Проверяю структуру...',
+            'Готово! Проверьте и скачайте ↓',
           ]} />
         )}
 
@@ -377,6 +390,8 @@ export default function AnalysisPage() {
               onSubmitRecheck={handleSubmitRecheck}
               onChangeRole={handleChangeRole}
               isRechecking={state.step === 'rechecking'}
+              taskId={state.taskId}
+              onBulletUpdate={updateBullet}
             />
           </div>
         )}

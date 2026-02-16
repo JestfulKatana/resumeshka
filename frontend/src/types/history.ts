@@ -5,4 +5,5 @@ export interface HistoryEntry {
   score: number | null;
   grade: string | null;
   createdAt: number;
+  hasRewrite?: boolean;
 }

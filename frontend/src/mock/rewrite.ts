@@ -7,6 +7,7 @@ export const mockRewrite: RewriteResult = {
     'Product Manager с 4-летним опытом в B2B SaaS — от аналитики до управления продуктом. Специализируется на discovery, приоритизации на основе данных и запуске фичей, влияющих на ключевые бизнес-метрики. Управлял кросс-функциональной командой из 8 человек.',
   experiences: [
     {
+      block_id: 1,
       company: 'TechCorp',
       role: 'Product Manager',
       period: '2022–2024',
@@ -43,6 +44,7 @@ export const mockRewrite: RewriteResult = {
       ],
     },
     {
+      block_id: 2,
       company: 'StartupAI',
       role: 'Project Manager',
       period: '2021–2022',
@@ -72,6 +74,7 @@ export const mockRewrite: RewriteResult = {
       ],
     },
     {
+      block_id: 3,
       company: 'Digital Agency',
       role: 'Junior Analyst → Product Analyst',
       period: '2020–2021',
