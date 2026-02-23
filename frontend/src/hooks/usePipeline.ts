@@ -104,6 +104,49 @@ function reducer(state: PipelineState, action: PipelineAction): PipelineState {
       if (state.selectedRole) updatedCache[state.selectedRole] = updatedRewrite;
       return { ...state, rewrite: updatedRewrite, rewriteCache: updatedCache };
     }
+    case 'ADD_BULLET': {
+      if (!state.rewrite) return state;
+      const updatedExperiences = state.rewrite.experiences.map((exp) => {
+        if (exp.block_id !== action.blockId) return exp;
+        return {
+          ...exp,
+          rewritten_bullets: [...exp.rewritten_bullets, action.text],
+          original_bullets: [...exp.original_bullets, action.text],
+          highlights: [...exp.highlights, { action: 'keep' as const, comment: '' }],
+        };
+      });
+      const updatedRewrite = { ...state.rewrite, experiences: updatedExperiences };
+      const updatedCache = { ...state.rewriteCache };
+      if (state.selectedRole) updatedCache[state.selectedRole] = updatedRewrite;
+      return { ...state, rewrite: updatedRewrite, rewriteCache: updatedCache };
+    }
+    case 'DELETE_BULLET': {
+      if (!state.rewrite) return state;
+      const updatedExperiences = state.rewrite.experiences.map((exp) => {
+        if (exp.block_id !== action.blockId) return exp;
+        return {
+          ...exp,
+          rewritten_bullets: exp.rewritten_bullets.filter((_, i) => i !== action.bulletIndex),
+          original_bullets: exp.original_bullets.filter((_, i) => i !== action.bulletIndex),
+          highlights: exp.highlights.filter((_, i) => i !== action.bulletIndex),
+        };
+      });
+      const updatedRewrite = { ...state.rewrite, experiences: updatedExperiences };
+      const updatedCache = { ...state.rewriteCache };
+      if (state.selectedRole) updatedCache[state.selectedRole] = updatedRewrite;
+      return { ...state, rewrite: updatedRewrite, rewriteCache: updatedCache };
+    }
+    case 'UPDATE_DUTIES': {
+      if (!state.rewrite) return state;
+      const updatedExperiences = state.rewrite.experiences.map((exp) => {
+        if (exp.block_id !== action.blockId) return exp;
+        return { ...exp, responsibilities: action.duties };
+      });
+      const updatedRewrite = { ...state.rewrite, experiences: updatedExperiences };
+      const updatedCache = { ...state.rewriteCache };
+      if (state.selectedRole) updatedCache[state.selectedRole] = updatedRewrite;
+      return { ...state, rewrite: updatedRewrite, rewriteCache: updatedCache };
+    }
     case 'CHANGE_ROLE':
       return {
         ...state,
@@ -291,11 +334,23 @@ export function usePipeline() {
     dispatch({ type: 'UPDATE_BULLET', blockId, bulletIndex, newText });
   }, []);
 
+  const addBullet = useCallback((blockId: number, text: string) => {
+    dispatch({ type: 'ADD_BULLET', blockId, text });
+  }, []);
+
+  const deleteBullet = useCallback((blockId: number, bulletIndex: number) => {
+    dispatch({ type: 'DELETE_BULLET', blockId, bulletIndex });
+  }, []);
+
+  const updateDuties = useCallback((blockId: number, duties: string[]) => {
+    dispatch({ type: 'UPDATE_DUTIES', blockId, duties });
+  }, []);
+
   const restore = useCallback((saved: Partial<PipelineState>) => {
     dispatch({ type: 'RESTORE', saved });
   }, []);
 
   const reset = useCallback(() => dispatch({ type: 'RESET' }), []);
 
-  return { state, startAnalysis, fetchRoles, selectRole, submitRecheck, changeRole, saveVersion, updateBullet, restore, reset };
+  return { state, startAnalysis, fetchRoles, selectRole, submitRecheck, changeRole, saveVersion, updateBullet, addBullet, deleteBullet, updateDuties, restore, reset };
 }

@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Bullet Editing UX — Сравнение вариантов</title>
+<style>
+  :root {
+    --bg: #0a0a0a; --bg-card: #141414; --bg-elevated: #1a1a1a;
+    --text-primary: #f5f5f5; --text-secondary: #a0a0a0; --text-muted: #666;
+    --border: #2a2a2a; --accent: #7c3aed;
+    --violet: #7c3aed; --sky: #38bdf8; --amber: #f59e0b;
+    --success: #22c55e; --critical: #ef4444;
+    --radius: 10px; --radius-sm: 6px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text-primary); font-family: 'SF Pro Display', -apple-system, sans-serif; }
+
+  .page { max-width: 1200px; margin: 0 auto; padding: 40px 24px; }
+  h1 { font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+  .subtitle { font-size: 14px; color: var(--text-muted); margin-bottom: 40px; }
+
+  .variants { display: flex; flex-direction: column; gap: 48px; }
+
+  .variant {
+    border: 2px solid var(--border); border-radius: var(--radius);
+    overflow: hidden;
+  }
+  .variant-header {
+    padding: 16px 24px; display: flex; align-items: center; gap: 12px;
+    border-bottom: 2px solid var(--border); background: var(--bg-elevated);
+  }
+  .variant-number {
+    width: 32px; height: 32px; border-radius: 50%; display: flex;
+    align-items: center; justify-content: center; font-weight: 800;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .variant-title { font-size: 16px; font-weight: 700; }
+  .variant-desc { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+  .variant-body { padding: 24px; }
+
+  /* Flow steps */
+  .flow { display: flex; gap: 16px; overflow-x: auto; padding-bottom: 8px; }
+  .flow-step {
+    flex-shrink: 0; width: 320px; border: 2px solid var(--border);
+    border-radius: var(--radius); overflow: hidden;
+  }
+  .flow-step-header {
+    padding: 10px 14px; font-size: 11px; font-weight: 700;
+    border-bottom: 1px solid var(--border); background: var(--bg-elevated);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .flow-step-num {
+    width: 20px; height: 20px; border-radius: 50%; font-size: 10px;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--violet); color: #fff; flex-shrink: 0;
+  }
+  .flow-step-body { padding: 14px; }
+  .flow-arrow {
+    display: flex; align-items: center; color: var(--text-muted);
+    font-size: 20px; flex-shrink: 0; align-self: center;
+  }
+
+  /* Mock bullet */
+  .mock-bullet {
+    display: flex; gap: 8px; padding: 6px 8px; border-radius: var(--radius-sm);
+    line-height: 1.6; align-items: flex-start; position: relative;
+    transition: all 0.15s;
+  }
+  .mock-bullet-num {
+    color: var(--text-muted); font-size: 12px; font-weight: 600;
+    font-family: 'JetBrains Mono', monospace; min-width: 18px; text-align: right;
+    flex-shrink: 0;
+  }
+  .mock-bullet-text { font-size: 13px; color: var(--text-secondary); flex: 1; }
+
+  /* Variant-specific styles */
+  .mock-bullet.hover-state { background: color-mix(in srgb, var(--violet) 6%, transparent); }
+  .hover-actions {
+    display: flex; gap: 4px; flex-shrink: 0; opacity: 0;
+    transition: opacity 0.15s;
+  }
+  .mock-bullet.hover-state .hover-actions { opacity: 1; }
+  .hover-btn {
+    width: 26px; height: 26px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border); background: var(--bg-card);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; cursor: pointer;
+  }
+  .hover-btn.primary { border-color: var(--violet); color: var(--violet); }
+
+  /* Selection highlight */
+  .text-selected {
+    background: color-mix(in srgb, var(--violet) 25%, transparent);
+    border-radius: 2px; padding: 0 1px;
+  }
+
+  /* Floating toolbar */
+  .floating-toolbar {
+    display: inline-flex; border-radius: var(--radius-sm);
+    border: 2px solid var(--border); overflow: hidden;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5); background: var(--bg-elevated);
+    position: relative; margin-bottom: 8px;
+  }
+  .ft-btn {
+    font-size: 11px; font-weight: 700; padding: 6px 14px;
+    border: none; cursor: pointer; white-space: nowrap;
+    background: var(--bg-elevated); color: var(--text-secondary);
+    border-right: 1px solid var(--border);
+  }
+  .ft-btn.primary { background: var(--violet); color: #fff; border-right: none; }
+  .ft-btn-arrow { position: absolute; bottom: -6px; left: 50%; transform: translateX(-50%);
+    width: 10px; height: 10px; background: var(--bg-elevated);
+    border-right: 2px solid var(--border); border-bottom: 2px solid var(--border);
+    transform: translateX(-50%) rotate(45deg);
+  }
+
+  /* Regen panel */
+  .regen-panel {
+    margin-left: 26px; margin-top: 8px; padding: 12px 14px;
+    border-radius: var(--radius); border: 1.5px solid color-mix(in srgb, var(--violet) 30%, transparent);
+    background: color-mix(in srgb, var(--violet) 6%, var(--bg-card));
+  }
+  .regen-title { font-size: 11px; font-weight: 700; color: var(--violet); margin-bottom: 6px; }
+  .regen-selected { font-size: 11px; color: var(--text-muted); font-style: italic; margin-bottom: 8px; }
+  .regen-input {
+    width: 100%; font-size: 12px; padding: 8px 10px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border); background: var(--bg-elevated); color: var(--text-primary);
+    font-family: inherit; resize: none;
+  }
+  .regen-actions { display: flex; gap: 6px; margin-top: 8px; }
+  .regen-btn {
+    font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: var(--radius-sm);
+    border: 1.5px solid; cursor: pointer;
+  }
+  .regen-btn.primary { background: var(--violet); color: #fff; border-color: var(--violet); }
+  .regen-btn.cancel { background: transparent; color: var(--text-muted); border-color: var(--border); }
+
+  /* Diff panel */
+  .diff-panel {
+    margin-left: 26px; margin-top: 8px; border-radius: var(--radius);
+    border: 1.5px solid color-mix(in srgb, var(--success) 30%, transparent); overflow: hidden;
+  }
+  .diff-header {
+    font-size: 10px; font-weight: 700; color: var(--success);
+    padding: 8px 14px; display: flex; justify-content: space-between;
+    background: color-mix(in srgb, var(--success) 6%, var(--bg-card));
+    border-bottom: 1px solid color-mix(in srgb, var(--success) 15%, transparent);
+  }
+  .diff-body { padding: 10px 14px; background: color-mix(in srgb, var(--success) 3%, var(--bg-card)); }
+  .diff-old { font-size: 12px; color: var(--text-muted); text-decoration: line-through; line-height: 1.5; }
+  .diff-new { font-size: 12px; color: var(--text-primary); font-weight: 500; margin-top: 6px; line-height: 1.5; }
+  .diff-actions {
+    display: flex; gap: 6px; padding: 8px 14px;
+    background: color-mix(in srgb, var(--success) 3%, var(--bg-card));
+    border-top: 1px solid color-mix(in srgb, var(--success) 10%, transparent);
+  }
+  .diff-btn {
+    font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: var(--radius-sm);
+    cursor: pointer; border: 1.5px solid;
+  }
+  .diff-btn.accept { background: var(--success); color: var(--bg); border-color: var(--success); }
+  .diff-btn.reject { background: transparent; color: var(--text-muted); border-color: var(--border); }
+  .diff-btn.retry { background: transparent; color: var(--violet); border-color: color-mix(in srgb, var(--violet) 40%, transparent); }
+
+  /* Click-to-expand panel */
+  .bullet-actions-inline {
+    margin-left: 26px; margin-top: 6px; display: flex; gap: 6px; padding: 4px 0;
+  }
+  .inline-action-btn {
+    font-size: 11px; font-weight: 700; padding: 5px 12px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border); background: var(--bg-card); color: var(--text-secondary);
+    cursor: pointer; transition: all 0.15s;
+  }
+  .inline-action-btn.edit { border-color: var(--sky); color: var(--sky); }
+  .inline-action-btn.ai { border-color: var(--violet); color: var(--violet); background: color-mix(in srgb, var(--violet) 8%, var(--bg-card)); }
+
+  /* Always-visible kebab */
+  .kebab-btn {
+    width: 24px; height: 24px; display: flex; align-items: center; justify-content: center;
+    border-radius: var(--radius-sm); border: 1.5px solid transparent;
+    background: transparent; color: var(--text-muted); cursor: pointer;
+    font-size: 14px; transition: all 0.15s; flex-shrink: 0;
+  }
+  .kebab-btn:hover, .kebab-btn.active {
+    border-color: var(--border); background: var(--bg-elevated);
+  }
+  .kebab-menu {
+    position: absolute; right: 0; top: 28px; z-index: 10;
+    border: 2px solid var(--border); border-radius: var(--radius-sm);
+    background: var(--bg-elevated); box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    min-width: 180px; overflow: hidden;
+  }
+  .kebab-item {
+    padding: 8px 14px; font-size: 12px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid var(--border); color: var(--text-secondary);
+  }
+  .kebab-item:last-child { border-bottom: none; }
+  .kebab-item:hover { background: color-mix(in srgb, var(--violet) 10%, transparent); }
+  .kebab-item .icon { font-size: 14px; }
+
+  /* Pros/cons */
+  .verdict { display: flex; gap: 24px; margin-top: 16px; padding-top: 16px; border-top: 1px solid var(--border); }
+  .verdict-col { flex: 1; }
+  .verdict-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+  .verdict-label.pro { color: var(--success); }
+  .verdict-label.con { color: var(--critical); }
+  .verdict-item { font-size: 12px; color: var(--text-muted); line-height: 1.6; padding-left: 12px; position: relative; }
+  .verdict-item::before { content: ''; position: absolute; left: 0; top: 8px; width: 4px; height: 4px; border-radius: 50%; }
+  .verdict-col:first-child .verdict-item::before { background: var(--success); }
+  .verdict-col:last-child .verdict-item::before { background: var(--critical); }
+
+  /* Recommendation badge */
+  .rec-badge {
+    font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 999px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .rec-badge.recommended { background: var(--success); color: var(--bg); }
+  .rec-badge.alternative { background: var(--amber); color: var(--bg); }
+  .rec-badge.current { background: var(--text-muted); color: var(--bg); }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>Bullet Editing UX — Сравнение</h1>
+<p class="subtitle">Три варианта взаимодействия с буллетами в Редакторе. Каждый показан пошагово.</p>
+
+<div class="variants">
+
+<!-- ===== VARIANT A: Hover buttons ===== -->
+<div class="variant">
+  <div class="variant-header">
+    <div class="variant-number" style="background: var(--success); color: var(--bg);">A</div>
+    <div>
+      <div class="variant-title">Hover-кнопки <span class="rec-badge recommended">Рекомендую</span></div>
+      <div class="variant-desc">При наведении на буллет — справа появляются иконки ✏️ и 🔄</div>
+    </div>
+  </div>
+  <div class="variant-body">
+    <div class="flow">
+      <!-- Step 1: Default state -->
+      <div class="flow-step">
+        <div class="flow-step-header"><div class="flow-step-num">1</div> Просмотр</div>
+        <div class="flow-step-body">
+          <div class="mock-bullet">
+            <span class="mock-bullet-num">1.</span>
+            <span class="mock-bullet-text">Спроектировал микросервисную архитектуру на Go + Kubernetes для 1M+ запросов</span>
+          </div>
+          <div class="mock-bullet">
+            <span class="mock-bullet-num">2.</span>
+            <span class="mock-bullet-text">Внедрил CI/CD пайплайн на GitLab, сократив время деплоя с 2ч до 15 минут</span>
+          </div>
+          <div class="mock-bullet" style="opacity: 0.5;">
+            <span class="mock-bullet-num">3.</span>
+            <span class="mock-bullet-text">Оптимизировал [уточнить: количество] SQL-запросов...</span>
+          </div>
+          <div style="margin-top: 12px; text-align: center; font-size: 10px; color: var(--text-muted); font-style: italic;">
+            Кнопки скрыты — чистый вид
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-arrow">→</div>
+
+      <!-- Step 2: Hover -->
+      <div class="flow-step">
+        <div class="flow-step-header"><div class="flow-step-num">2</div> Наведение на буллет</div>
+        <div class="flow-step-body">
+          <div class="mock-bullet" style="opacity: 0.5;">
+            <span class="mock-bullet-num">1.</span>
+            <span class="mock-bullet-text">Спроектировал микросервисную архитектуру...</span>
+          </div>
+          <div class="mock-bullet hover-state">
+            <span class="mock-bullet-num" style="color: var(--violet);">2.</span>
+            <span class="mock-bullet-text" style="color: var(--text-primary);">Внедрил CI/CD пайплайн на GitLab, сократив время деплоя с 2ч до 15 минут</span>
+            <div class="hover-actions" style="opacity: 1;">
+              <div class="hover-btn" title="Редактировать">✏️</div>
+              <div class="hover-btn primary" title="Переписать с AI">🔄</div>
+            </div>
+          </div>
+          <div class="mock-bullet" style="opacity: 0.5;">
+            <span class="mock-bullet-num">3.</span>
+            <span class="mock-bullet-text">Оптимизировал SQL-запросов...</span>
+          </div>
+          <div style="margin-top: 12px; text-align: center; font-size: 10px; color: var(--violet); font-weight: 600;">
+            ← Кнопки появляются при наведении
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-arrow">→</div>
+
+      <!-- Step 3: Regen panel -->
+      <div class="flow-step">
+        <div class="flow-step-header"><div class="flow-step-num">3</div> Клик 🔄 → ввод комментария</div>
+        <div class="flow-step-body">
+          <div class="mock-bullet" style="opacity: 0.3;">
+            <span class="mock-bullet-num">1.</span>
+            <span class="mock-bullet-text">Спроектировал...</span>
+          </div>
+          <div class="mock-bullet" style="opacity: 0.5;">
+            <span class="mock-bullet-num">2.</span>
+            <span class="mock-bullet-text">Внедрил CI/CD пайплайн на GitLab...</span>
+          </div>
+          <div class="regen-panel">
+            <div class="regen-title">🔄 Переписать буллет</div>
+            <div class="regen-selected">Весь буллет #2</div>
+            <textarea class="regen-input" rows="2" placeholder="Что здесь должно быть?">Укажи что мигрировали с Jenkins</textarea>
+            <div class="regen-actions">
+              <div class="regen-btn primary">⚡ Переписать</div>
+              <div class="regen-btn cancel">Отмена</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-arrow">→</div>
+
+      <!-- Step 4: Diff -->
+      <div class="flow-step">
+        <div class="flow-step-header"><div class="flow-step-num">4</div> Результат — принять / отклонить</div>
+        <div class="flow-step-body">
+          <div class="mock-bullet" style="opacity: 0.3;">
+            <span class="mock-bullet-num">1.</span>
+            <span class="mock-bullet-text">Спроектировал...</span>
+          </div>
+          <div class="mock-bullet" style="opacity: 0.4;">
+            <span class="mock-bullet-num">2.</span>
+            <span class="mock-bullet-text" style="text-decoration: line-through;">Внедрил CI/CD пайплайн на GitLab...</span>
+          </div>
+          <div class="diff-panel">
+            <div class="diff-header">
+              <span>✨ Новый вариант</span>
+              <span style="opacity: 0.6;">на основе вашего комментария</span>
+            </div>
+            <div class="diff-body">
+              <div class="diff-old">Внедрил CI/CD пайплайн на GitLab, сократив время деплоя с 2ч до 15 минут</div>
+              <div class="diff-new">→ Перевёл CI/CD с Jenkins на GitLab CI, сократив время деплоя с 2 часов до 15 минут и снизив количество откатов на 60%</div>
+            </div>
+            <div class="diff-actions">
+              <div class="diff-btn accept">✓ Принять</div>
+              <div class="diff-btn reject">✕ Отклонить</div>
+              <div class="diff-btn retry">🔄 Ещё</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="verdict">
+      <div class="verdict-col">
+        <div class="verdict-label pro">Плюсы</div>
+        <div class="verdict-item">Очевидно — видишь кнопки при наведении</div>
+        <div class="verdict-item">Чистый вид без наведения</div>
+        <div class="verdict-item">1 клик до действия (не 2)</div>
+        <div class="verdict-item">Работает и на десктопе, и на тачскрине (кнопки видимы на мобиле)</div>
+      </div>
+      <div class="verdict-col">
+        <div class="verdict-label con">Минусы</div>
+        <div class="verdict-item">Нельзя выбрать часть буллета — только весь</div>
+        <div class="verdict-item">Нет hover на мобиле (fallback: всегда видимые кнопки)</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== VARIANT B: Click → inline panel ===== -->
+<div class="variant">
+  <div class="variant-header">
+    <div class="variant-number" style="background: var(--amber); color: var(--bg);">B</div>
+    <div>
+      <div class="variant-title">Клик по буллету → панель действий <span class="rec-badge alternative">Альтернатива</span></div>
+      <div class="variant-desc">Один клик по буллету — под ним разворачивается панель с кнопками</div>
+    </div>
+  </div>
+  <div class="variant-body">
+    <div class="flow">
+      <!-- Step 1 -->
+      <div class="flow-step">
+        <div class="flow-step-header"><div class="flow-step-num">1</div> Просмотр</div>
+        <div class="flow-step-body">
+          <div class="mock-bullet" style="cursor: pointer;">
+            <span class="mock-bullet-num">1.</span>
+            <span class="mock-bullet-text">Спроектировал микросервисную архитектуру на Go + Kubernetes для 1M+ запросов</span>
+          </div>
+          <div class="mock-bullet" style="cursor: pointer;">
+            <span class="mock-bullet-num">2.</span>
+            <span class="mock-bullet-text">Внедрил CI/CD пайплайн на GitLab, сократив время деплоя с 2ч до 15 минут</span>
+          </div>
+          <div class="mock-bullet" style="cursor: pointer;">
+            <span class="mock-bullet-num">3.</span>
+            <span class="mock-bullet-text">Оптимизировал <span style="color: var(--amber); background: color-mix(in srgb, var(--amber) 12%, transparent); padding: 0 3px; border-radius: 2px; border: 1px solid var(--amber);">[уточнить: кол-во]</span> SQL-запросов</span>
+          </div>
+          <div style="margin-top: 12px; padding: 8px 14px; border-radius: var(--radius-sm); background: color-mix(in srgb, var(--violet) 4%, transparent); border: 1px dashed color-mix(in srgb, var(--violet) 20%, transparent); text-align: center;">
+            <span style="font-size: 10px; color: var(--text-muted);">Кликните на буллет чтобы редактировать</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-arrow">→</div>
+
+      <!-- Step 2: Click → actions -->
+      <div class="flow-step">
+        <div class="flow-step-header"><div class="flow-step-num">2</div> Клик по буллету → панель</div>
+        <div class="flow-step-body">
+          <div class="mock-bullet" style="opacity: 0.5;">
+            <span class="mock-bullet-num">1.</span>
+            <span class="mock-bullet-text">Спроектировал микросервисную архитектуру...</span>
+          </div>
+          <div class="mock-bullet hover-state">
+            <span class="mock-bullet-num" style="color: var(--violet);">2.</span>
+            <span class="mock-bullet-text" style="color: var(--text-primary);">Внедрил CI/CD пайплайн на GitLab, сократив время деплоя с 2ч до 15 минут</span>
+          </div>
+          <div class="bullet-actions-inline">
+            <div class="inline-action-btn edit">✏️ Редактировать</div>
+            <div class="inline-action-btn ai">🔄 Переписать с AI</div>
+          </div>
+          <div class="mock-bullet" style="opacity: 0.5;">
+            <span class="mock-bullet-num">3.</span>
+            <span class="mock-bullet-text">Оптимизировал SQL-запросов...</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-arrow">→</div>
+
+      <!-- Step 3: Same regen -->
+      <div class="flow-step">
+        <div class="flow-step-header"><div class="flow-step-num">3</div> Ввод комментария</div>
+        <div class="flow-step-body">
+          <div class="mock-bullet" style="opacity: 0.5;">
+            <span class="mock-bullet-num">2.</span>
+            <span class="mock-bullet-text">Внедрил CI/CD пайплайн на GitLab...</span>
+          </div>
+          <div class="regen-panel">
+            <div class="regen-title">🔄 Переписать буллет #2</div>
+            <textarea class="regen-input" rows="2" placeholder="Что здесь должно быть?">Укажи что мигрировали с Jenkins</textarea>
+            <div class="regen-actions">
+              <div class="regen-btn primary">⚡ Переписать</div>
+              <div class="regen-btn cancel">Отмена</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-arrow">→</div>
+
+      <!-- Step 4: Diff (same) -->
+      <div class="flow-step">
+        <div class="flow-step-header"><div class="flow-step-num">4</div> Результат</div>
+        <div class="flow-step-body">
+          <div class="diff-panel">
+            <div class="diff-header">
+              <span>✨ Новый вариант</span>
+            </div>
+            <div class="diff-body">
+              <div class="diff-old">Внедрил CI/CD пайплайн на GitLab, сократив время деплоя с 2ч до 15 минут</div>
+              <div class="diff-new">→ Перевёл CI/CD с Jenkins на GitLab CI, сократив время деплоя с 2ч до 15 минут и снизив откаты на 60%</div>
+            </div>
+            <div class="diff-actions">
+              <div class="diff-btn accept">✓ Принять</div>
+              <div class="diff-btn reject">✕ Отклонить</div>
+              <div class="diff-btn retry">🔄 Ещё</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="verdict">
+      <div class="verdict-col">
+        <div class="verdict-label pro">Плюсы</div>
+        <div class="verdict-item">Суперпонятно — кликнул и видишь варианты</div>
+        <div class="verdict-item">Работает на мобиле без проблем</div>
+        <div class="verdict-item">Промежуточная панель даёт осознанный выбор</div>
+      </div>
+      <div class="verdict-col">
+        <div class="verdict-label con">Минусы</div>
+        <div class="verdict-item">2 клика до действия (клик → панель → кнопка)</div>
+        <div class="verdict-item">Нельзя выделить часть буллета — только весь</div>
+        <div class="verdict-item">Клик по буллету «съедает» возможность копирования текста</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== VARIANT C: Kebab menu ===== -->
+<div class="variant">
+  <div class="variant-header">
+    <div class="variant-number" style="background: var(--text-muted); color: var(--bg);">C</div>
+    <div>
+      <div class="variant-title">Кнопка ⋯ на каждом буллете <span class="rec-badge current">Текущий + Notion-стиль</span></div>
+      <div class="variant-desc">Постоянно видимая кнопка ⋯ справа, по клику — меню. Текст всё ещё выделяемый.</div>
+    </div>
+  </div>
+  <div class="variant-body">
+    <div class="flow">
+      <!-- Step 1 -->
+      <div class="flow-step">
+        <div class="flow-step-header"><div class="flow-step-num">1</div> Просмотр — кнопки видны</div>
+        <div class="flow-step-body">
+          <div class="mock-bullet">
+            <span class="mock-bullet-num">1.</span>
+            <span class="mock-bullet-text">Спроектировал микросервисную архитектуру на Go + Kubernetes</span>
+            <div class="kebab-btn">⋯</div>
+          </div>
+          <div class="mock-bullet">
+            <span class="mock-bullet-num">2.</span>
+            <span class="mock-bullet-text">Внедрил CI/CD пайплайн на GitLab, сократив деплой с 2ч до 15 мин</span>
+            <div class="kebab-btn">⋯</div>
+          </div>
+          <div class="mock-bullet">
+            <span class="mock-bullet-num">3.</span>
+            <span class="mock-bullet-text">Оптимизировал <span style="color: var(--amber);">[уточнить: кол-во]</span> SQL-запросов</span>
+            <div class="kebab-btn">⋯</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-arrow">→</div>
+
+      <!-- Step 2: Kebab open -->
+      <div class="flow-step">
+        <div class="flow-step-header"><div class="flow-step-num">2</div> Клик ⋯ → меню</div>
+        <div class="flow-step-body">
+          <div class="mock-bullet" style="opacity: 0.5;">
+            <span class="mock-bullet-num">1.</span>
+            <span class="mock-bullet-text">Спроектировал...</span>
+            <div class="kebab-btn">⋯</div>
+          </div>
+          <div class="mock-bullet hover-state" style="position: relative;">
+            <span class="mock-bullet-num" style="color: var(--violet);">2.</span>
+            <span class="mock-bullet-text" style="color: var(--text-primary);">Внедрил CI/CD пайплайн на GitLab, сократив деплой с 2ч до 15 мин</span>
+            <div class="kebab-btn active" style="position: relative;">
+              ⋯
+              <div class="kebab-menu">
+                <div class="kebab-item"><span class="icon">✏️</span> Редактировать</div>
+                <div class="kebab-item"><span class="icon">🔄</span> Переписать с AI</div>
+                <div class="kebab-item"><span class="icon">📋</span> Копировать</div>
+                <div class="kebab-item"><span class="icon">↩</span> Показать оригинал</div>
+              </div>
+            </div>
+          </div>
+          <div class="mock-bullet" style="opacity: 0.5;">
+            <span class="mock-bullet-num">3.</span>
+            <span class="mock-bullet-text">Оптимизировал...</span>
+            <div class="kebab-btn">⋯</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-arrow">→</div>
+
+      <!-- Step 2b: OR text selection -->
+      <div class="flow-step">
+        <div class="flow-step-header"><div class="flow-step-num">2'</div> ИЛИ: выделение фрагмента</div>
+        <div class="flow-step-body">
+          <div style="text-align: center; margin-bottom: 12px;">
+            <div class="floating-toolbar">
+              <div class="ft-btn">✏️ Редактировать</div>
+              <div class="ft-btn primary">🔄 Переписать с AI</div>
+            </div>
+          </div>
+          <div class="mock-bullet" style="opacity: 0.5;">
+            <span class="mock-bullet-num">1.</span>
+            <span class="mock-bullet-text">Спроектировал...</span>
+            <div class="kebab-btn">⋯</div>
+          </div>
+          <div class="mock-bullet hover-state">
+            <span class="mock-bullet-num" style="color: var(--violet);">2.</span>
+            <span class="mock-bullet-text">Внедрил <span class="text-selected">CI/CD пайплайн на GitLab</span>, сократив деплой с 2ч до 15 мин</span>
+            <div class="kebab-btn">⋯</div>
+          </div>
+          <div style="margin-top: 8px; text-align: center; font-size: 10px; color: var(--violet); font-weight: 600;">
+            Выделил фрагмент → floating toolbar
+          </div>
+        </div>
+      </div>
+
+      <div class="flow-arrow">→</div>
+
+      <!-- Step 3: Same result -->
+      <div class="flow-step">
+        <div class="flow-step-header"><div class="flow-step-num">3</div> Комментарий + результат</div>
+        <div class="flow-step-body">
+          <div class="regen-panel" style="margin-left: 0;">
+            <div class="regen-title">🔄 Переписать фрагмент</div>
+            <div class="regen-selected">«CI/CD пайплайн на GitLab»</div>
+            <textarea class="regen-input" rows="1" placeholder="Что тут должно быть?">Мигрировали с Jenkins</textarea>
+            <div class="regen-actions">
+              <div class="regen-btn primary">⚡ Переписать</div>
+              <div class="regen-btn cancel">Отмена</div>
+            </div>
+          </div>
+          <div style="margin-top: 12px; font-size: 10px; color: var(--success); text-align: center; font-weight: 600;">
+            Дальше — тот же diff как в A и B
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="verdict">
+      <div class="verdict-col">
+        <div class="verdict-label pro">Плюсы</div>
+        <div class="verdict-item">Два пути: ⋯ для всего буллета + выделение для фрагмента</div>
+        <div class="verdict-item">Можно выбрать часть текста (уникально!)</div>
+        <div class="verdict-item">Расширяемое меню (копировать, оригинал, etc)</div>
+        <div class="verdict-item">Привычный паттерн (Notion, Google Docs)</div>
+      </div>
+      <div class="verdict-col">
+        <div class="verdict-label con">Минусы</div>
+        <div class="verdict-item">Визуальный шум — ⋯ на каждом буллете</div>
+        <div class="verdict-item">Выделение фрагмента всё ещё неочевидно</div>
+        <div class="verdict-item">Два разных паттерна взаимодействия — путаница</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- Recommendation -->
+<div style="margin-top: 48px; padding: 24px; border: 2px solid var(--success); border-radius: var(--radius); background: color-mix(in srgb, var(--success) 4%, var(--bg-card));">
+  <div style="font-size: 14px; font-weight: 800; color: var(--success); margin-bottom: 8px;">💡 Моя рекомендация</div>
+  <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.7; margin: 0 0 12px;">
+    <strong>Вариант A (hover-кнопки)</strong> — максимально простой и понятный. 1 клик → комментарий → результат.<br>
+    Выделение фрагмента — красивая фича, но 90% пользователей хотят переписать весь буллет, а не его часть.
+  </p>
+  <p style="font-size: 13px; color: var(--text-secondary); line-height: 1.7; margin: 0 0 12px;">
+    <strong>Компромисс (A + выделение):</strong> hover-кнопки как основной путь + сохранить floating toolbar при выделении текста как power-user фичу. Так получаешь оба сценария без путаницы.
+  </p>
+  <p style="font-size: 12px; color: var(--text-muted); margin: 0;">
+    Вариант B проигрывает по скорости (2 клика), вариант C сложнее и визуально шумный.
+  </p>
+</div>
+
+</div>
+</body>
+</html>

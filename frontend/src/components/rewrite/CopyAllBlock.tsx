@@ -7,7 +7,7 @@ interface CopyAllBlockProps {
   skills: Skills;
 }
 
-function buildResumeText(summary: string, experiences: Experience[], skills: Skills): string {
+export function buildResumeText(summary: string, experiences: Experience[], skills: Skills): string {
   const parts: string[] = [];
 
   parts.push('О себе');

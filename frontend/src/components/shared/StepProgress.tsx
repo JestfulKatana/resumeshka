@@ -5,8 +5,8 @@ interface StepProgressProps {
   intervalMs?: number;
 }
 
-export default function StepProgress({ messages, intervalMs = 2800 }: StepProgressProps) {
-  const [index, setIndex] = useState(0);
+export default function StepProgress({ messages, intervalMs = 2000 }: StepProgressProps) {
+  const [index, setIndex] = useState(() => Math.floor(Math.random() * messages.length));
   const [fade, setFade] = useState(true);
 
   useEffect(() => {
@@ -89,7 +89,8 @@ export default function StepProgress({ messages, intervalMs = 2800 }: StepProgre
             fontSize: 15,
             fontWeight: 600,
             color: 'var(--text-secondary)',
-            height: 22,
+            minHeight: 22,
+            whiteSpace: 'nowrap',
             transition: 'opacity 0.3s ease',
             opacity: fade ? 1 : 0,
           }}

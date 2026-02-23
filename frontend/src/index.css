@@ -375,3 +375,23 @@ body {
   background-size: 200% 100%;
   animation: shimmer 1.5s ease-in-out infinite;
 }
+
+/* ================================================================
+   BULLET ROW HOVER ACTIONS
+   ================================================================ */
+
+.bullet-row:hover {
+  background: color-mix(in srgb, var(--nb-violet) 4%, transparent);
+}
+
+.bullet-row:hover .bullet-hover-actions {
+  opacity: 1 !important;
+}
+
+.duty-row:hover {
+  background: color-mix(in srgb, var(--nb-sky) 4%, transparent);
+}
+
+.duty-row:hover .duty-hover-actions {
+  opacity: 1 !important;
+}

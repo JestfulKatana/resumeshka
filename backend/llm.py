@@ -61,8 +61,9 @@ def _calc_cost(usage) -> float:
     out = getattr(usage, "output_tokens", 0) or 0
     cache_read = getattr(usage, "cache_read_input_tokens", 0) or 0
     cache_write = getattr(usage, "cache_creation_input_tokens", 0) or 0
+    # input_tokens = non-cached input (separate from cache counters)
     return (
-        (inp - cache_read) * PRICE_INPUT / 1_000_000
+        inp * PRICE_INPUT / 1_000_000
         + out * PRICE_OUTPUT / 1_000_000
         + cache_read * PRICE_CACHE_READ / 1_000_000
         + cache_write * PRICE_CACHE_WRITE / 1_000_000
@@ -124,6 +125,7 @@ async def call_claude(
     schema_name: str = "result",
     max_tokens: int = MAX_TOKENS,
     label: str | None = None,
+    web_search: bool = False,
 ) -> dict:
     """Call Claude with structured output via tool_use pattern.
 
@@ -132,14 +134,33 @@ async def call_claude(
 
     schema_name — tool name in the API request (must be stable for caching).
     label — display name for logs (defaults to schema_name).
+    web_search — if True, enable server-side web search tool (Claude searches the web).
     """
     log_label = label or schema_name
     await rpm_limiter.acquire()
 
-    logger.info(f">>> [{log_label}] Sending request to {MODEL}...")
+    logger.info(f">>> [{log_label}] Sending request to {MODEL}{'  [+web_search]' if web_search else ''}...")
     t0 = time.monotonic()
 
     user_content = user_message if isinstance(user_message, list) else user_message
+
+    tools: list[dict] = []
+    if web_search:
+        tools.append({
+            "type": "web_search_20250305",
+            "name": "web_search",
+            "max_uses": 3,
+            "user_location": {
+                "type": "approximate",
+                "country": "RU",
+            },
+        })
+    tools.append({
+        "name": schema_name,
+        "description": "Return the structured analysis result",
+        "input_schema": output_schema,
+        "cache_control": {"type": "ephemeral"},
+    })
 
     response = await client.messages.create(
         model=MODEL,
@@ -152,14 +173,7 @@ async def call_claude(
             }
         ],
         messages=[{"role": "user", "content": user_content}],
-        tools=[
-            {
-                "name": schema_name,
-                "description": "Return the structured analysis result",
-                "input_schema": output_schema,
-                "cache_control": {"type": "ephemeral"},
-            }
-        ],
+        tools=tools,
         tool_choice={"type": "tool", "name": schema_name},
     )
 
@@ -179,9 +193,13 @@ async def call_claude(
     _session_totals["cost"] += cost
     _session_totals["calls"] += 1
 
+    # Log web search usage if present
+    web_searches = getattr(getattr(usage, "server_tool_use", None), "web_search_requests", 0) or 0
+    web_suffix = f" web_searches={web_searches}" if web_searches else ""
+
     logger.info(
         f"<<< [{log_label}] {elapsed:.1f}s | "
-        f"in={inp} out={out} cache_read={cache_read} cache_write={cache_write} | "
+        f"in={inp} out={out} cache_read={cache_read} cache_write={cache_write}{web_suffix} | "
         f"${cost:.4f} (session: ${_session_totals['cost']:.4f}, {_session_totals['calls']} calls)"
     )
 
@@ -304,7 +322,10 @@ async def run_roles(resume_text: str, analysis: dict, key_skills: dict | None = 
             "text": analysis_part,
         },
     ]
-    result = await call_claude(ROLES_SYSTEM, user_blocks, ROLES_SCHEMA, "roles")
+    result = await call_claude(
+        ROLES_SYSTEM, user_blocks, ROLES_SCHEMA, "roles",
+        web_search=True,
+    )
 
     # Safety: ensure recommendation exists (model may omit it)
     if "recommendation" not in result or not result["recommendation"]:
@@ -382,7 +403,14 @@ async def _rewrite_meta(
     """Generate summary, skills, recommendations from all rewritten blocks."""
     blocks_json = json.dumps(rewritten_blocks, ensure_ascii=False)
 
+    # Resume first with cache_control — stable across role changes,
+    # second call reuses cached prefix (~15K tokens saved)
     user_blocks = [
+        {
+            "type": "text",
+            "text": f"Оригинальное резюме:\n{resume_text}",
+            "cache_control": {"type": "ephemeral"},
+        },
         {
             "type": "text",
             "text": (
@@ -391,10 +419,6 @@ async def _rewrite_meta(
                 f"{json.dumps(role_details, ensure_ascii=False)}\n\n"
                 f"Переписанные блоки опыта:\n{blocks_json}"
             ),
-        },
-        {
-            "type": "text",
-            "text": f"\n\nОригинальное резюме:\n{resume_text}",
         },
     ]
 

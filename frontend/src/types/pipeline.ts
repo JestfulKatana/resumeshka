@@ -65,5 +65,8 @@ export type PipelineAction =
   | { type: 'RESTORE_VERSION'; versionId: number }
   | { type: 'SET_ERROR'; error: string | null }
   | { type: 'UPDATE_BULLET'; blockId: number; bulletIndex: number; newText: string }
+  | { type: 'ADD_BULLET'; blockId: number; text: string }
+  | { type: 'DELETE_BULLET'; blockId: number; bulletIndex: number }
+  | { type: 'UPDATE_DUTIES'; blockId: number; duties: string[] }
   | { type: 'RESTORE'; saved: Partial<PipelineState> }
   | { type: 'RESET' };

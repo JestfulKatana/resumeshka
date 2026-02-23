@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Редактор — Интерактивный UX</title>
+<style>
+  :root {
+    --bg: #101010; --bg-card: #1a1a1a; --bg-elevated: #1e1e1e; --bg-secondary: #161616;
+    --text-primary: #f0f0f0; --text-secondary: #a0a0a0; --text-muted: #666;
+    --border: #333; --border-subtle: rgba(255,255,255,0.06);
+    --violet: #8B5CF6; --sky: #60A5FA; --amber: #FBBF24;
+    --success: #22C55E; --critical: #EF4444;
+    --radius: 10px; --radius-sm: 6px; --radius-lg: 14px;
+    --border-width: 2.5px;
+    --shadow: 4px 4px 0 rgba(0,0,0,0.6);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); color: var(--text-primary); font-family: 'Inter', -apple-system, sans-serif; }
+  .page { max-width: 800px; margin: 0 auto; padding: 40px 24px; }
+  h1 { font-size: 22px; font-weight: 800; margin-bottom: 6px; }
+  .subtitle { font-size: 12px; color: var(--text-muted); margin-bottom: 32px; }
+
+  /* Card */
+  .card {
+    background: var(--bg-card); border: var(--border-width) solid var(--border);
+    border-radius: var(--radius-lg); box-shadow: var(--shadow); overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .card-header {
+    padding: 14px 20px; display: flex; align-items: center; justify-content: space-between;
+    border-bottom: var(--border-width) solid var(--border-subtle); background: var(--bg-elevated);
+  }
+  .card-body { padding: 18px 20px; }
+
+  .label {
+    font-size: 10px; font-weight: 700; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+  }
+
+  /* Header parts */
+  .header-left { display: flex; align-items: flex-start; gap: 10px; flex: 1; min-width: 0; }
+  .accent-bar { width: 4px; height: 36px; border-radius: 2px; background: var(--amber); flex-shrink: 0; margin-top: 2px; }
+  .company { font-size: 15px; font-weight: 800; }
+  .role { font-size: 14px; font-weight: 600; color: var(--text-secondary); }
+  .meta { font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
+
+  /* Bullet / result row */
+  .result-row {
+    display: flex; gap: 8px; line-height: 1.6; align-items: flex-start;
+    padding: 4px 8px; border-radius: var(--radius-sm); transition: background 0.15s;
+  }
+  .result-row:hover { background: color-mix(in srgb, var(--violet) 4%, transparent); }
+  .result-row.editing { background: color-mix(in srgb, var(--violet) 6%, transparent); }
+  .result-row.loading {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--violet) 4%, transparent) 0%, color-mix(in srgb, var(--violet) 8%, transparent) 50%, color-mix(in srgb, var(--violet) 4%, transparent) 100%);
+    background-size: 200% 100%; animation: bulletShimmer 2s ease-in-out infinite;
+  }
+  .result-row.deleting { opacity: 0.4; }
+  .result-num {
+    color: var(--text-muted); flex-shrink: 0; font-size: 12px; font-weight: 600;
+    font-family: 'JetBrains Mono', monospace; min-width: 18px; text-align: right; line-height: 1.6;
+  }
+  .result-text { font-size: 13px; color: var(--text-secondary); flex: 1; line-height: 1.6; cursor: text; }
+  .result-row:hover .result-num { color: var(--violet); }
+  .result-row:hover .result-text { color: var(--text-primary); }
+  .result-text.struck { text-decoration: line-through; }
+
+  /* Edit input for results */
+  .result-edit {
+    flex: 1; font-size: 13px; color: var(--text-primary); line-height: 1.6;
+    background: var(--bg-secondary); border: 1.5px solid var(--violet);
+    border-radius: var(--radius-sm); padding: 5px 8px; outline: none; font-family: inherit;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--violet) 10%, transparent);
+    resize: none; width: 100%; field-sizing: content; min-height: 1.6em;
+  }
+
+  /* Hover actions */
+  .hover-actions { display: flex; gap: 3px; flex-shrink: 0; align-items: center; opacity: 0; transition: opacity 0.15s; }
+  .result-row:hover .hover-actions { opacity: 1; }
+  .hbtn {
+    width: 26px; height: 26px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border); background: var(--bg-card);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; cursor: pointer; transition: all 0.15s; position: relative;
+  }
+  .hbtn:hover { border-color: var(--violet); background: color-mix(in srgb, var(--violet) 8%, var(--bg-card)); }
+  .hbtn.danger:hover { border-color: var(--critical); background: color-mix(in srgb, var(--critical) 6%, var(--bg-card)); }
+
+  /* Revert button */
+  .revert-btn {
+    font-size: 13px; width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted); background: transparent; border: none; border-radius: 50%;
+    cursor: pointer; opacity: 0.4; transition: all 0.15s;
+  }
+  .revert-btn:hover { opacity: 1; color: var(--sky); }
+
+  /* AI loader */
+  .ai-loader {
+    display: flex; gap: 3px; align-items: center; flex-shrink: 0;
+  }
+  .ai-label { font-size: 10px; color: var(--violet); font-weight: 700; }
+  .ai-dots { display: flex; gap: 2px; }
+  .ai-dot {
+    width: 4px; height: 4px; border-radius: 50%; background: var(--violet);
+    animation: bulletPulse 1.2s ease-in-out infinite;
+  }
+  .ai-dot:nth-child(2) { animation-delay: 0.2s; }
+  .ai-dot:nth-child(3) { animation-delay: 0.4s; }
+
+  /* Add row */
+  .add-row {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 4px 10px 4px 6px; margin-top: 6px;
+    border-radius: 999px; cursor: pointer;
+    border: none; background: transparent;
+    color: var(--text-muted); font-size: 11px; font-weight: 600;
+    transition: all 0.15s; opacity: 0.5;
+  }
+  .add-row:hover { opacity: 1; color: var(--violet); background: color-mix(in srgb, var(--violet) 6%, transparent); }
+  .add-row.sky:hover { color: var(--sky); background: color-mix(in srgb, var(--sky) 6%, transparent); }
+
+  /* Duty row */
+  .duty-row {
+    display: flex; gap: 8px; align-items: flex-start;
+    padding: 3px 8px; border-radius: var(--radius-sm); transition: background 0.15s;
+  }
+  .duty-row:hover { background: color-mix(in srgb, var(--sky) 4%, transparent); }
+  .duty-row.editing { background: color-mix(in srgb, var(--sky) 4%, transparent); }
+  .duty-row.loading {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--sky) 4%, transparent) 0%, color-mix(in srgb, var(--sky) 8%, transparent) 50%, color-mix(in srgb, var(--sky) 4%, transparent) 100%);
+    background-size: 200% 100%; animation: bulletShimmer 2s ease-in-out infinite;
+  }
+  .duty-row.deleting { opacity: 0.4; }
+  .duty-dot { color: var(--text-muted); flex-shrink: 0; font-size: 12px; line-height: 1.5; }
+  .duty-text { font-size: 12px; color: var(--text-muted); line-height: 1.5; flex: 1; }
+  .duty-row:hover .duty-text { color: var(--text-secondary); }
+  .duty-text.struck { text-decoration: line-through; }
+  .duty-actions { display: flex; gap: 3px; flex-shrink: 0; align-items: center; opacity: 0; transition: opacity 0.15s; }
+  .duty-row:hover .duty-actions { opacity: 1; }
+  .dbtn {
+    width: 22px; height: 22px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border); background: var(--bg-card);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; cursor: pointer; transition: all 0.15s;
+  }
+  .dbtn:hover { border-color: var(--sky); }
+  .dbtn.danger:hover { border-color: var(--critical); }
+
+  /* Duty edit input */
+  .duty-edit {
+    flex: 1; font-size: 12px; color: var(--text-primary); line-height: 1.5;
+    background: var(--bg-secondary); border: 1.5px solid var(--sky);
+    border-radius: var(--radius-sm); padding: 5px 8px; outline: none; font-family: inherit;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--sky) 10%, transparent);
+  }
+
+  /* Summary block */
+  .summary-body { padding: 16px 20px; position: relative; transition: background 0.15s; border-radius: 0 0 var(--radius-lg) var(--radius-lg); }
+  .summary-body:hover { background: color-mix(in srgb, var(--violet) 3%, transparent); }
+  .summary-body.editing { background: color-mix(in srgb, var(--violet) 5%, transparent); }
+  .summary-body.loading {
+    background: linear-gradient(90deg, color-mix(in srgb, var(--violet) 3%, transparent) 0%, color-mix(in srgb, var(--violet) 7%, transparent) 50%, color-mix(in srgb, var(--violet) 3%, transparent) 100%);
+    background-size: 200% 100%; animation: bulletShimmer 2s ease-in-out infinite;
+  }
+  .summary-text { font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
+  .summary-actions {
+    position: absolute; top: 12px; right: 16px;
+    display: flex; gap: 3px; opacity: 0; transition: opacity 0.15s;
+  }
+  .summary-body:hover .summary-actions { opacity: 1; }
+  .summary-edit {
+    width: 100%; font-size: 13px; color: var(--text-primary); line-height: 1.7;
+    background: var(--bg-secondary); border: 1.5px solid var(--violet);
+    border-radius: var(--radius-sm); padding: 8px 10px; outline: none; font-family: inherit;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--violet) 10%, transparent);
+    resize: vertical; min-height: 60px;
+  }
+
+  /* Inline confirm */
+  .confirm {
+    margin-left: 26px; margin-top: 6px; margin-bottom: 4px; padding: 10px 14px;
+    border-radius: var(--radius);
+    border: 1.5px solid color-mix(in srgb, var(--critical) 30%, transparent);
+    background: color-mix(in srgb, var(--critical) 4%, var(--bg-card));
+    display: flex; align-items: center; gap: 10px;
+    animation: fadeIn 0.15s ease;
+  }
+  .confirm-text { font-size: 12px; color: var(--text-secondary); flex: 1; }
+  .cbtn { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-sm); cursor: pointer; border: 1.5px solid; }
+  .cbtn-yes { background: var(--critical); color: #fff; border-color: var(--critical); }
+  .cbtn-no { background: transparent; color: var(--text-muted); border-color: var(--border); }
+  .cbtn-yes:hover { filter: brightness(1.1); }
+  .cbtn-no:hover { border-color: var(--text-muted); color: var(--text-secondary); }
+
+  /* Add inline panel */
+  .add-panel {
+    margin-top: 8px; padding: 10px 14px;
+    border-radius: var(--radius);
+    border: 1.5px solid color-mix(in srgb, var(--violet) 30%, transparent);
+    background: color-mix(in srgb, var(--violet) 4%, var(--bg-card));
+    animation: fadeIn 0.15s ease;
+  }
+  .add-panel.sky {
+    border-color: color-mix(in srgb, var(--sky) 30%, transparent);
+    background: color-mix(in srgb, var(--sky) 4%, var(--bg-card));
+  }
+  .add-input {
+    width: 100%; font-size: 12px; padding: 8px 10px; border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border); background: var(--bg-secondary); color: var(--text-primary);
+    font-family: inherit; resize: none; outline: none;
+  }
+  .add-input:focus { border-color: var(--violet); box-shadow: 0 0 0 3px color-mix(in srgb, var(--violet) 10%, transparent); }
+  .add-input.sky:focus { border-color: var(--sky); box-shadow: 0 0 0 3px color-mix(in srgb, var(--sky) 10%, transparent); }
+  .add-actions { display: flex; gap: 6px; margin-top: 8px; align-items: center; }
+  .abtn { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: var(--radius-sm); cursor: pointer; border: 1.5px solid; transition: all 0.15s; }
+  .abtn-primary { background: var(--violet); color: #fff; border-color: var(--violet); }
+  .abtn-primary:hover { filter: brightness(1.15); }
+  .abtn-primary.sky { background: var(--sky); border-color: var(--sky); }
+  .abtn-ai { background: color-mix(in srgb, var(--violet) 10%, transparent); color: var(--violet); border-color: color-mix(in srgb, var(--violet) 40%, transparent); }
+  .abtn-ai:hover { background: color-mix(in srgb, var(--violet) 16%, transparent); }
+  .abtn-ai.sky { color: var(--sky); background: color-mix(in srgb, var(--sky) 10%, transparent); border-color: color-mix(in srgb, var(--sky) 40%, transparent); }
+  .abtn-ai.sky:hover { background: color-mix(in srgb, var(--sky) 16%, transparent); }
+  .abtn-cancel { background: transparent; color: var(--text-muted); border-color: var(--border); }
+  .abtn-cancel:hover { color: var(--text-secondary); border-color: var(--text-muted); }
+
+  /* Loader dots */
+  @keyframes bulletPulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+  @keyframes bulletShimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slideOut {
+    from { opacity: 1; max-height: 60px; margin-bottom: 2px; }
+    to { opacity: 0; max-height: 0; margin-bottom: 0; padding-top: 0; padding-bottom: 0; }
+  }
+
+  /* Divider */
+  .divider { height: 1px; background: var(--border-subtle); margin: 20px 0; }
+
+  /* Toast */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+    background: var(--bg-elevated); border: var(--border-width) solid var(--border);
+    border-radius: var(--radius); padding: 10px 18px;
+    font-size: 12px; font-weight: 600; color: var(--text-primary);
+    box-shadow: var(--shadow); z-index: 100;
+    animation: fadeIn 0.2s ease;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .toast.success { border-color: var(--success); }
+  .toast.info { border-color: var(--violet); }
+
+  /* Edit actions row */
+  .edit-actions {
+    display: flex; gap: 4px; margin-top: 4px; margin-left: 26px;
+    animation: fadeIn 0.1s ease;
+  }
+  .edit-actions .abtn { font-size: 10px; padding: 3px 8px; }
+
+  /* Copy button */
+  .copy-btn {
+    font-size: 10px; color: var(--text-muted); cursor: pointer;
+    background: none; border: none; font-family: inherit;
+    transition: color 0.15s;
+  }
+  .copy-btn:hover { color: var(--violet); }
+
+  /* Hidden */
+  .hidden { display: none !important; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<h1>Редактор резюме — Интерактивный UX</h1>
+<p class="subtitle">Кликай на кнопки, редактируй текст, генерируй AI-варианты.</p>
+
+<!-- ===================== О СЕБЕ ===================== -->
+<div class="card" id="summary-card">
+  <div class="card-header">
+    <span style="font-size: 13px; font-weight: 800;">О себе</span>
+    <button class="copy-btn" onclick="copySection('summary')">📋 Копировать</button>
+  </div>
+  <div class="summary-body" id="summary-body">
+    <div class="summary-text" id="summary-text" ondblclick="editSummary()">
+      Product-oriented системный аналитик с 5+ годами опыта в разработке высоконагруженных B2B/B2C-продуктов. Специализируюсь на проектировании микросервисных архитектур, API-дизайне и cross-team координации. Сильные стороны: декомпозиция сложных бизнес-процессов в технические требования.
+    </div>
+    <div class="summary-actions">
+      <div class="hbtn" onclick="editSummary()" title="Редактировать">✏️</div>
+      <div class="hbtn" onclick="aiSummary()" title="AI улучшение">✨</div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== EXPERIENCE ===================== -->
+<div class="card">
+  <div class="card-header">
+    <div class="header-left">
+      <div class="accent-bar"></div>
+      <div>
+        <span class="company">Иннотех, Группа компаний</span>
+        <div><span class="role">Главный аналитик, Сервис видеоконференций DION</span></div>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <button class="copy-btn" onclick="copySection('experience')">📋</button>
+      <span class="meta">Авг 2024 — наст. время</span>
+    </div>
+  </div>
+
+  <div class="card-body">
+    <div class="label">Результаты</div>
+    <div id="results-list"></div>
+
+    <!-- + Добавить результат -->
+    <div class="add-row" id="add-result-btn" onclick="showAddResult()">
+      <span style="font-size: 14px;">+</span>
+      Добавить результат
+    </div>
+    <div class="add-panel hidden" id="add-result-panel">
+      <div style="font-size: 11px; font-weight: 700; color: var(--violet); margin-bottom: 6px;">
+        Новый результат
+      </div>
+      <textarea class="add-input" id="add-result-input" rows="2" placeholder="Опишите достижение, результат или факт..." onkeydown="handleAddResultKey(event)"></textarea>
+      <div class="add-actions">
+        <button class="abtn abtn-primary" onclick="addResult()">✓ Добавить</button>
+        <button class="abtn abtn-ai" onclick="addResultAI()">✨ Улучшить с AI</button>
+        <button class="abtn abtn-cancel" onclick="hideAddResult()">Отмена</button>
+        <span style="font-size: 10px; color: var(--text-muted); margin-left: auto;">Enter — добавить · ⌘Enter — с AI</span>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Обязанности -->
+    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+      <span class="label" style="margin-bottom: 0;">Обязанности</span>
+    </div>
+
+    <div id="duties-list"></div>
+
+    <!-- + Добавить обязанность -->
+    <div class="add-row sky" id="add-duty-btn" onclick="showAddDuty()">
+      <span style="font-size: 14px;">+</span>
+      Добавить обязанность
+    </div>
+    <div class="add-panel sky hidden" id="add-duty-panel">
+      <div style="font-size: 11px; font-weight: 700; color: var(--sky); margin-bottom: 6px;">
+        Новая обязанность
+      </div>
+      <textarea class="add-input sky" id="add-duty-input" rows="1" placeholder="Опишите обязанность..." onkeydown="handleAddDutyKey(event)"></textarea>
+      <div class="add-actions">
+        <button class="abtn abtn-primary sky" onclick="addDuty()">✓ Добавить</button>
+        <button class="abtn abtn-ai sky" onclick="addDutyAI()">✨ Сгенерировать с AI</button>
+        <button class="abtn abtn-cancel" onclick="hideAddDuty()">Отмена</button>
+        <span style="font-size: 10px; color: var(--text-muted); margin-left: auto;">Enter — добавить · ⌘Enter — с AI</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div>
+
+<div id="toast-container"></div>
+
+<script>
+// ===================== DATA =====================
+const initialResults = [
+  'Собрал и приоритизировал требования для 15 фич мобильного клиента, обеспечив кросс-платформенную совместимость, снизив количество багов интеграции на 10%.',
+  'Провёл пользовательские и конкурентные исследования, выявив 3 критических улучшения продукта; совместно с product manager определил требования',
+  'Спроектировал архитектуру взаимодействия микросервисов (gRPC/REST API, Redis PubSub) для real-time коммуникации',
+  'Координировал работу разработки, QA и продакт-команды на всех этапах delivery',
+  'Согласовывал требования с разработчиками и QA через качественную спецификацию',
+];
+
+const initialDuties = [
+  'Сбор и приоритизация требований для cross-platform продукта',
+  'Пользовательские и конкурентные исследования',
+  'Архитектурное проектирование микросервисов',
+];
+
+// Fake AI improvements
+const aiResultVariants = [
+  'Инициировал и провёл миграцию legacy-монолита на микросервисную архитектуру (12 сервисов), сократив время деплоя с 2 часов до 15 минут и снизив количество инцидентов на 40%',
+  'Внедрил автоматизированное нагрузочное тестирование (k6 + Grafana), что позволило выявить и устранить 8 критических bottleneck-ов до продакшена',
+  'Оптимизировал процесс code review, введя автоматические линтеры и architectural decision records, сократив время ревью на 35%',
+  'Спроектировал и реализовал систему мониторинга бизнес-метрик (custom dashboards), обеспечив real-time visibility для product-команды',
+  'Разработал framework для A/B тестирования, который позволил проводить 3x больше экспериментов в квартал',
+  'Провёл аудит безопасности API-слоя, выявил и устранил 5 критических уязвимостей (OWASP Top 10), внедрил automated security scanning в CI/CD',
+  'Создал систему автоматической генерации API-документации из OpenAPI-спецификаций, сократив время онбординга новых разработчиков на 60%',
+];
+
+const aiDutyVariants = [
+  'Разработка и поддержка API-спецификаций (OpenAPI/Swagger) для 10+ микросервисов',
+  'Координация cross-functional команд (Backend, Frontend, QA, DevOps) в рамках Scrum-процесса',
+  'Проведение технических интервью и менторинг junior-аналитиков',
+  'Формирование product backlog и приоритизация задач совместно с Product Owner',
+  'Мониторинг SLA и SLO сервисов, анализ инцидентов и формирование post-mortem отчётов',
+  'Ведение технической документации и архитектурных решений (ADR)',
+  'Организация и фасилитация design review и architecture decision meetings',
+  'Анализ пользовательского поведения (Amplitude, Mixpanel) для формирования data-driven рекомендаций',
+];
+
+const aiSummaryVariants = [
+  'Product-minded системный аналитик с 5+ годами опыта в проектировании высоконагруженных B2B/B2C-платформ (до 10M MAU). Владею полным стеком аналитических инструментов: от UML/BPMN-моделирования до gRPC/REST API-дизайна. Ключевая компетенция — трансформация сложных бизнес-требований в масштабируемые технические решения с фокусом на time-to-market.',
+  'Системный аналитик / Technical Product Owner с глубокой экспертизой в микросервисных архитектурах и API-first подходе. 5+ лет опыта на стыке бизнеса и технологий: от discovery-фазы (CustDev, конкурентный анализ) до delivery (спецификации, приёмка, мониторинг). Драйвер cross-team коллабораций в командах 20+ человек.',
+];
+
+// State
+let results = initialResults.map((text, i) => ({
+  id: i,
+  text,
+  original: text,
+  editing: false,
+  loading: false,
+  deleting: false,
+}));
+let nextResultId = results.length;
+
+let duties = initialDuties.map((text, i) => ({
+  id: i,
+  text,
+  original: text,
+  editing: false,
+  loading: false,
+  deleting: false,
+}));
+let nextDutyId = duties.length;
+
+let summaryOriginal = document.getElementById('summary-text').textContent.trim();
+let summaryEditing = false;
+let summaryLoading = false;
+
+// ===================== RENDER =====================
+function renderResults() {
+  const container = document.getElementById('results-list');
+  container.innerHTML = '';
+  results.forEach((r, idx) => {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'display:flex;flex-direction:column;gap:2px;margin-bottom:2px;';
+    wrapper.id = `result-wrapper-${r.id}`;
+
+    const row = document.createElement('div');
+    row.className = 'result-row' + (r.editing ? ' editing' : '') + (r.loading ? ' loading' : '') + (r.deleting ? ' deleting' : '');
+
+    const num = document.createElement('span');
+    num.className = 'result-num';
+    if (r.loading) num.style.color = 'var(--violet)';
+    num.textContent = `${idx + 1}.`;
+    row.appendChild(num);
+
+    if (r.editing) {
+      const input = document.createElement('textarea');
+      input.className = 'result-edit';
+      input.value = r.text;
+      input.onkeydown = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveResult(r.id, input.value); }
+        if (e.key === 'Escape') cancelEditResult(r.id);
+      };
+      row.appendChild(input);
+      wrapper.appendChild(row);
+
+      const actions = document.createElement('div');
+      actions.className = 'edit-actions';
+      actions.innerHTML = `
+        <button class="abtn abtn-primary" onclick="saveResult(${r.id}, document.querySelector('#result-wrapper-${r.id} textarea').value)">✓ Сохранить</button>
+        <button class="abtn abtn-ai" onclick="aiEditResult(${r.id}, document.querySelector('#result-wrapper-${r.id} textarea').value)">✨ AI</button>
+        <button class="abtn abtn-cancel" onclick="cancelEditResult(${r.id})">Отмена</button>
+        <span style="font-size:10px;color:var(--text-muted);margin-left:auto;">Enter — сохранить · Esc — отмена</span>
+      `;
+      wrapper.appendChild(actions);
+      container.appendChild(wrapper);
+      setTimeout(() => { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }, 0);
+      return;
+    }
+
+    if (r.loading) {
+      const text = document.createElement('span');
+      text.className = 'result-text';
+      text.style.opacity = '0.4';
+      text.textContent = r.text;
+      row.appendChild(text);
+
+      const loader = document.createElement('span');
+      loader.className = 'ai-loader';
+      loader.innerHTML = '<span class="ai-label">AI</span><span class="ai-dots"><span class="ai-dot"></span><span class="ai-dot"></span><span class="ai-dot"></span></span>';
+      row.appendChild(loader);
+      wrapper.appendChild(row);
+      container.appendChild(wrapper);
+      return;
+    }
+
+    const text = document.createElement('span');
+    text.className = 'result-text' + (r.deleting ? ' struck' : '');
+    text.textContent = r.text;
+    text.ondblclick = () => startEditResult(r.id);
+    row.appendChild(text);
+
+    if (!r.deleting) {
+      const actions = document.createElement('div');
+      actions.className = 'hover-actions';
+      const changed = r.text !== r.original;
+      if (changed) {
+        const revert = document.createElement('button');
+        revert.className = 'revert-btn';
+        revert.textContent = '↩';
+        revert.title = 'Вернуть оригинал';
+        revert.onclick = () => revertResult(r.id);
+        actions.appendChild(revert);
+      }
+      actions.innerHTML += `
+        <div class="hbtn" onclick="startEditResult(${r.id})" title="Редактировать">✏️</div>
+        <div class="hbtn" onclick="aiResult(${r.id})" title="AI улучшение">✨</div>
+        <div class="hbtn danger" onclick="startDeleteResult(${r.id})" title="Удалить">🗑️</div>
+      `;
+      row.appendChild(actions);
+    }
+
+    wrapper.appendChild(row);
+
+    if (r.deleting) {
+      const confirm = document.createElement('div');
+      confirm.className = 'confirm';
+      confirm.innerHTML = `
+        <span class="confirm-text">Удалить этот результат?</span>
+        <button class="cbtn cbtn-yes" onclick="confirmDeleteResult(${r.id})">Удалить</button>
+        <button class="cbtn cbtn-no" onclick="cancelDeleteResult(${r.id})">Отмена</button>
+      `;
+      wrapper.appendChild(confirm);
+    }
+
+    container.appendChild(wrapper);
+  });
+}
+
+function renderDuties() {
+  const container = document.getElementById('duties-list');
+  container.innerHTML = '';
+  duties.forEach((d) => {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'display:flex;flex-direction:column;gap:2px;margin-bottom:2px;';
+    wrapper.id = `duty-wrapper-${d.id}`;
+
+    const row = document.createElement('div');
+    row.className = 'duty-row' + (d.editing ? ' editing' : '') + (d.loading ? ' loading' : '') + (d.deleting ? ' deleting' : '');
+
+    const dot = document.createElement('span');
+    dot.className = 'duty-dot';
+    if (d.editing) dot.style.color = 'var(--sky)';
+    dot.textContent = '•';
+    row.appendChild(dot);
+
+    if (d.editing) {
+      const input = document.createElement('input');
+      input.type = 'text';
+      input.className = 'duty-edit';
+      input.value = d.text;
+      input.onkeydown = (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); saveDuty(d.id, input.value); }
+        if (e.key === 'Escape') cancelEditDuty(d.id);
+      };
+      row.appendChild(input);
+
+      const actions = document.createElement('div');
+      actions.className = 'duty-actions';
+      actions.style.opacity = '1';
+      actions.innerHTML = `
+        <div class="dbtn" onclick="saveDuty(${d.id}, document.querySelector('#duty-wrapper-${d.id} input').value)" title="Сохранить" style="border-color:var(--success);color:var(--success);">✓</div>
+        <div class="dbtn" onclick="aiEditDuty(${d.id}, document.querySelector('#duty-wrapper-${d.id} input').value)" title="AI" style="border-color:var(--sky);color:var(--sky);">✨</div>
+        <div class="dbtn danger" onclick="cancelEditDuty(${d.id})" title="Отмена">✕</div>
+      `;
+      row.appendChild(actions);
+      wrapper.appendChild(row);
+      container.appendChild(wrapper);
+      setTimeout(() => { input.focus(); input.setSelectionRange(input.value.length, input.value.length); }, 0);
+      return;
+    }
+
+    if (d.loading) {
+      const text = document.createElement('span');
+      text.className = 'duty-text';
+      text.style.opacity = '0.4';
+      text.textContent = d.text;
+      row.appendChild(text);
+
+      const loader = document.createElement('span');
+      loader.className = 'ai-loader';
+      loader.innerHTML = '<span class="ai-label" style="color:var(--sky);">AI</span><span class="ai-dots"><span class="ai-dot" style="background:var(--sky);"></span><span class="ai-dot" style="background:var(--sky);"></span><span class="ai-dot" style="background:var(--sky);"></span></span>';
+      row.appendChild(loader);
+      wrapper.appendChild(row);
+      container.appendChild(wrapper);
+      return;
+    }
+
+    const text = document.createElement('span');
+    text.className = 'duty-text' + (d.deleting ? ' struck' : '');
+    text.textContent = d.text;
+    text.ondblclick = () => startEditDuty(d.id);
+    row.appendChild(text);
+
+    if (!d.deleting) {
+      const actions = document.createElement('div');
+      actions.className = 'duty-actions';
+      const changed = d.text !== d.original;
+      if (changed) {
+        const revert = document.createElement('button');
+        revert.className = 'revert-btn';
+        revert.style.cssText = 'font-size:11px;width:20px;height:20px;';
+        revert.textContent = '↩';
+        revert.title = 'Вернуть оригинал';
+        revert.onclick = () => revertDuty(d.id);
+        actions.appendChild(revert);
+      }
+      actions.innerHTML += `
+        <div class="dbtn" onclick="startEditDuty(${d.id})" title="Редактировать">✏️</div>
+        <div class="dbtn" onclick="aiDuty(${d.id})" title="AI улучшение">✨</div>
+        <div class="dbtn danger" onclick="startDeleteDuty(${d.id})" title="Удалить">✕</div>
+      `;
+      row.appendChild(actions);
+    }
+
+    wrapper.appendChild(row);
+
+    if (d.deleting) {
+      const confirm = document.createElement('div');
+      confirm.className = 'confirm';
+      confirm.style.marginLeft = '20px';
+      confirm.innerHTML = `
+        <span class="confirm-text">Удалить обязанность?</span>
+        <button class="cbtn cbtn-yes" onclick="confirmDeleteDuty(${d.id})">Удалить</button>
+        <button class="cbtn cbtn-no" onclick="cancelDeleteDuty(${d.id})">Отмена</button>
+      `;
+      wrapper.appendChild(confirm);
+    }
+
+    container.appendChild(wrapper);
+  });
+}
+
+// ===================== RESULTS ACTIONS =====================
+function startEditResult(id) {
+  results = results.map(r => ({ ...r, editing: r.id === id, deleting: false }));
+  renderResults();
+}
+
+function saveResult(id, value) {
+  if (!value.trim()) return;
+  results = results.map(r => r.id === id ? { ...r, text: value.trim(), editing: false } : r);
+  renderResults();
+  showToast('Результат обновлён', 'success');
+}
+
+function cancelEditResult(id) {
+  results = results.map(r => r.id === id ? { ...r, editing: false } : r);
+  renderResults();
+}
+
+function aiResult(id) {
+  const r = results.find(x => x.id === id);
+  if (!r) return;
+  results = results.map(x => x.id === id ? { ...x, loading: true } : x);
+  renderResults();
+  const delay = 800 + Math.random() * 1200;
+  setTimeout(() => {
+    const variant = pickRandom(aiResultVariants, r.text);
+    results = results.map(x => x.id === id ? { ...x, text: variant, loading: false } : x);
+    renderResults();
+    showToast('AI сгенерировал новый вариант', 'info');
+  }, delay);
+}
+
+function aiEditResult(id, currentValue) {
+  results = results.map(x => x.id === id ? { ...x, editing: false, loading: true } : x);
+  renderResults();
+  const delay = 800 + Math.random() * 1200;
+  setTimeout(() => {
+    const variant = pickRandom(aiResultVariants, currentValue);
+    results = results.map(x => x.id === id ? { ...x, text: variant, loading: false } : x);
+    renderResults();
+    showToast('AI улучшил результат', 'info');
+  }, delay);
+}
+
+function startDeleteResult(id) {
+  results = results.map(r => ({ ...r, deleting: r.id === id, editing: false }));
+  renderResults();
+}
+
+function confirmDeleteResult(id) {
+  const el = document.getElementById(`result-wrapper-${id}`);
+  if (el) {
+    el.style.animation = 'slideOut 0.2s ease forwards';
+    el.style.overflow = 'hidden';
+    setTimeout(() => {
+      results = results.filter(r => r.id !== id);
+      renderResults();
+      showToast('Результат удалён', 'success');
+    }, 200);
+  }
+}
+
+function cancelDeleteResult(id) {
+  results = results.map(r => r.id === id ? { ...r, deleting: false } : r);
+  renderResults();
+}
+
+function revertResult(id) {
+  results = results.map(r => r.id === id ? { ...r, text: r.original } : r);
+  renderResults();
+  showToast('Возвращён оригинал', 'info');
+}
+
+// ===================== ADD RESULT =====================
+function showAddResult() {
+  document.getElementById('add-result-panel').classList.remove('hidden');
+  document.getElementById('add-result-btn').classList.add('hidden');
+  document.getElementById('add-result-input').focus();
+}
+
+function hideAddResult() {
+  document.getElementById('add-result-panel').classList.add('hidden');
+  document.getElementById('add-result-btn').classList.remove('hidden');
+  document.getElementById('add-result-input').value = '';
+}
+
+function addResult() {
+  const input = document.getElementById('add-result-input');
+  const text = input.value.trim();
+  if (!text) return;
+  results.push({ id: nextResultId++, text, original: text, editing: false, loading: false, deleting: false });
+  renderResults();
+  hideAddResult();
+  showToast('Результат добавлен', 'success');
+}
+
+function addResultAI() {
+  const input = document.getElementById('add-result-input');
+  const text = input.value.trim();
+  if (!text) return;
+  const newId = nextResultId++;
+  results.push({ id: newId, text, original: text, editing: false, loading: true, deleting: false });
+  renderResults();
+  hideAddResult();
+  const delay = 800 + Math.random() * 1200;
+  setTimeout(() => {
+    const variant = pickRandom(aiResultVariants, text);
+    results = results.map(r => r.id === newId ? { ...r, text: variant, original: variant, loading: false } : r);
+    renderResults();
+    showToast('AI создал улучшенный результат', 'info');
+  }, delay);
+}
+
+function handleAddResultKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey && !e.metaKey) { e.preventDefault(); addResult(); }
+  if (e.key === 'Enter' && e.metaKey) { e.preventDefault(); addResultAI(); }
+  if (e.key === 'Escape') hideAddResult();
+}
+
+// ===================== DUTIES ACTIONS =====================
+function startEditDuty(id) {
+  duties = duties.map(d => ({ ...d, editing: d.id === id, deleting: false }));
+  renderDuties();
+}
+
+function saveDuty(id, value) {
+  if (!value.trim()) return;
+  duties = duties.map(d => d.id === id ? { ...d, text: value.trim(), editing: false } : d);
+  renderDuties();
+  showToast('Обязанность обновлена', 'success');
+}
+
+function cancelEditDuty(id) {
+  duties = duties.map(d => d.id === id ? { ...d, editing: false } : d);
+  renderDuties();
+}
+
+function aiDuty(id) {
+  const d = duties.find(x => x.id === id);
+  if (!d) return;
+  duties = duties.map(x => x.id === id ? { ...x, loading: true } : x);
+  renderDuties();
+  const delay = 800 + Math.random() * 1200;
+  setTimeout(() => {
+    const variant = pickRandom(aiDutyVariants, d.text);
+    duties = duties.map(x => x.id === id ? { ...x, text: variant, loading: false } : x);
+    renderDuties();
+    showToast('AI улучшил обязанность', 'info');
+  }, delay);
+}
+
+function aiEditDuty(id, currentValue) {
+  duties = duties.map(x => x.id === id ? { ...x, editing: false, loading: true } : x);
+  renderDuties();
+  const delay = 800 + Math.random() * 1200;
+  setTimeout(() => {
+    const variant = pickRandom(aiDutyVariants, currentValue);
+    duties = duties.map(x => x.id === id ? { ...x, text: variant, loading: false } : x);
+    renderDuties();
+    showToast('AI улучшил обязанность', 'info');
+  }, delay);
+}
+
+function startDeleteDuty(id) {
+  duties = duties.map(d => ({ ...d, deleting: d.id === id, editing: false }));
+  renderDuties();
+}
+
+function confirmDeleteDuty(id) {
+  const el = document.getElementById(`duty-wrapper-${id}`);
+  if (el) {
+    el.style.animation = 'slideOut 0.2s ease forwards';
+    el.style.overflow = 'hidden';
+    setTimeout(() => {
+      duties = duties.filter(d => d.id !== id);
+      renderDuties();
+      showToast('Обязанность удалена', 'success');
+    }, 200);
+  }
+}
+
+function cancelDeleteDuty(id) {
+  duties = duties.map(d => d.id === id ? { ...d, deleting: false } : d);
+  renderDuties();
+}
+
+function revertDuty(id) {
+  duties = duties.map(d => d.id === id ? { ...d, text: d.original } : d);
+  renderDuties();
+  showToast('Возвращён оригинал', 'info');
+}
+
+// ===================== ADD DUTY =====================
+function showAddDuty() {
+  document.getElementById('add-duty-panel').classList.remove('hidden');
+  document.getElementById('add-duty-btn').classList.add('hidden');
+  document.getElementById('add-duty-input').focus();
+}
+
+function hideAddDuty() {
+  document.getElementById('add-duty-panel').classList.add('hidden');
+  document.getElementById('add-duty-btn').classList.remove('hidden');
+  document.getElementById('add-duty-input').value = '';
+}
+
+function addDuty() {
+  const input = document.getElementById('add-duty-input');
+  const text = input.value.trim();
+  if (!text) return;
+  duties.push({ id: nextDutyId++, text, original: text, editing: false, loading: false, deleting: false });
+  renderDuties();
+  hideAddDuty();
+  showToast('Обязанность добавлена', 'success');
+}
+
+function addDutyAI() {
+  const input = document.getElementById('add-duty-input');
+  const text = input.value.trim();
+  if (text) {
+    // Improve what user typed
+    const newId = nextDutyId++;
+    duties.push({ id: newId, text, original: text, editing: false, loading: true, deleting: false });
+    renderDuties();
+    hideAddDuty();
+    const delay = 800 + Math.random() * 1200;
+    setTimeout(() => {
+      const variant = pickRandom(aiDutyVariants, text);
+      duties = duties.map(d => d.id === newId ? { ...d, text: variant, original: variant, loading: false } : d);
+      renderDuties();
+      showToast('AI создал обязанность', 'info');
+    }, delay);
+  } else {
+    // Generate from scratch
+    const newId = nextDutyId++;
+    const placeholder = 'Генерация обязанности...';
+    duties.push({ id: newId, text: placeholder, original: '', editing: false, loading: true, deleting: false });
+    renderDuties();
+    hideAddDuty();
+    const delay = 800 + Math.random() * 1200;
+    setTimeout(() => {
+      const existing = duties.map(d => d.text);
+      const variant = pickRandom(aiDutyVariants.filter(v => !existing.includes(v)), placeholder);
+      duties = duties.map(d => d.id === newId ? { ...d, text: variant, original: variant, loading: false } : d);
+      renderDuties();
+      showToast('AI сгенерировал обязанность', 'info');
+    }, delay);
+  }
+}
+
+function handleAddDutyKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey && !e.metaKey) { e.preventDefault(); addDuty(); }
+  if (e.key === 'Enter' && e.metaKey) { e.preventDefault(); addDutyAI(); }
+  if (e.key === 'Escape') hideAddDuty();
+}
+
+// ===================== SUMMARY =====================
+function editSummary() {
+  if (summaryEditing || summaryLoading) return;
+  summaryEditing = true;
+  const body = document.getElementById('summary-body');
+  const textEl = document.getElementById('summary-text');
+  const currentText = textEl.textContent.trim();
+
+  body.classList.add('editing');
+  body.querySelector('.summary-actions').style.display = 'none';
+
+  const textarea = document.createElement('textarea');
+  textarea.className = 'summary-edit';
+  textarea.value = currentText;
+  textarea.onkeydown = (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveSummary(textarea.value); }
+    if (e.key === 'Escape') cancelSummaryEdit();
+  };
+  textEl.replaceWith(textarea);
+
+  const actions = document.createElement('div');
+  actions.id = 'summary-edit-actions';
+  actions.className = 'edit-actions';
+  actions.style.marginLeft = '0';
+  actions.innerHTML = `
+    <button class="abtn abtn-primary" onclick="saveSummary(document.querySelector('.summary-edit').value)">✓ Сохранить</button>
+    <button class="abtn abtn-ai" onclick="aiSummaryEdit(document.querySelector('.summary-edit').value)">✨ AI</button>
+    <button class="abtn abtn-cancel" onclick="cancelSummaryEdit()">Отмена</button>
+    <span style="font-size:10px;color:var(--text-muted);margin-left:auto;">Enter — сохранить · Esc — отмена</span>
+  `;
+  body.appendChild(actions);
+  textarea.focus();
+}
+
+function saveSummary(value) {
+  if (!value.trim()) return;
+  summaryEditing = false;
+  const body = document.getElementById('summary-body');
+  body.classList.remove('editing');
+
+  const textarea = body.querySelector('.summary-edit');
+  const div = document.createElement('div');
+  div.className = 'summary-text';
+  div.id = 'summary-text';
+  div.textContent = value.trim();
+  div.ondblclick = editSummary;
+  textarea.replaceWith(div);
+
+  const editActions = document.getElementById('summary-edit-actions');
+  if (editActions) editActions.remove();
+  body.querySelector('.summary-actions').style.display = '';
+  showToast('Саммари обновлено', 'success');
+}
+
+function cancelSummaryEdit() {
+  summaryEditing = false;
+  const body = document.getElementById('summary-body');
+  body.classList.remove('editing');
+
+  const textarea = body.querySelector('.summary-edit');
+  if (textarea) {
+    const div = document.createElement('div');
+    div.className = 'summary-text';
+    div.id = 'summary-text';
+    div.textContent = summaryOriginal;
+    div.ondblclick = editSummary;
+    textarea.replaceWith(div);
+  }
+  const editActions = document.getElementById('summary-edit-actions');
+  if (editActions) editActions.remove();
+  body.querySelector('.summary-actions').style.display = '';
+}
+
+function aiSummary() {
+  if (summaryLoading || summaryEditing) return;
+  summaryLoading = true;
+  const body = document.getElementById('summary-body');
+  const textEl = document.getElementById('summary-text');
+  body.classList.add('loading');
+  body.querySelector('.summary-actions').style.display = 'none';
+
+  const currentText = textEl.textContent.trim();
+  textEl.style.opacity = '0.4';
+
+  const loader = document.createElement('div');
+  loader.className = 'ai-loader';
+  loader.id = 'summary-loader';
+  loader.style.cssText = 'position:absolute;top:12px;right:16px;';
+  loader.innerHTML = '<span class="ai-label">AI</span><span class="ai-dots"><span class="ai-dot"></span><span class="ai-dot"></span><span class="ai-dot"></span></span>';
+  body.appendChild(loader);
+
+  const delay = 1000 + Math.random() * 1500;
+  setTimeout(() => {
+    summaryLoading = false;
+    body.classList.remove('loading');
+    textEl.style.opacity = '';
+    const loaderEl = document.getElementById('summary-loader');
+    if (loaderEl) loaderEl.remove();
+    body.querySelector('.summary-actions').style.display = '';
+
+    const variant = pickRandom(aiSummaryVariants, currentText);
+    textEl.textContent = variant;
+    summaryOriginal = variant;
+    showToast('AI обновил саммари', 'info');
+  }, delay);
+}
+
+function aiSummaryEdit(currentValue) {
+  summaryEditing = false;
+  summaryLoading = true;
+  const body = document.getElementById('summary-body');
+  body.classList.remove('editing');
+  body.classList.add('loading');
+
+  const textarea = body.querySelector('.summary-edit');
+  const div = document.createElement('div');
+  div.className = 'summary-text';
+  div.id = 'summary-text';
+  div.textContent = currentValue;
+  div.style.opacity = '0.4';
+  div.ondblclick = editSummary;
+  textarea.replaceWith(div);
+
+  const editActions = document.getElementById('summary-edit-actions');
+  if (editActions) editActions.remove();
+
+  const loader = document.createElement('div');
+  loader.className = 'ai-loader';
+  loader.id = 'summary-loader';
+  loader.style.cssText = 'position:absolute;top:12px;right:16px;';
+  loader.innerHTML = '<span class="ai-label">AI</span><span class="ai-dots"><span class="ai-dot"></span><span class="ai-dot"></span><span class="ai-dot"></span></span>';
+  body.appendChild(loader);
+
+  const delay = 1000 + Math.random() * 1500;
+  setTimeout(() => {
+    summaryLoading = false;
+    body.classList.remove('loading');
+    div.style.opacity = '';
+    const loaderEl = document.getElementById('summary-loader');
+    if (loaderEl) loaderEl.remove();
+    body.querySelector('.summary-actions').style.display = '';
+
+    const variant = pickRandom(aiSummaryVariants, currentValue);
+    div.textContent = variant;
+    summaryOriginal = variant;
+    showToast('AI улучшил саммари', 'info');
+  }, delay);
+}
+
+// ===================== COPY =====================
+function copySection(section) {
+  let text = '';
+  if (section === 'summary') {
+    text = document.getElementById('summary-text')?.textContent?.trim() || '';
+  } else if (section === 'experience') {
+    const bullets = results.map((r, i) => `${i + 1}. ${r.text}`).join('\n');
+    const dutyList = duties.map(d => `• ${d.text}`).join('\n');
+    text = `Результаты:\n${bullets}\n\nОбязанности:\n${dutyList}`;
+  }
+  navigator.clipboard.writeText(text).then(() => {
+    showToast('Скопировано в буфер', 'success');
+  }).catch(() => {
+    showToast('Не удалось скопировать', 'success');
+  });
+}
+
+// ===================== UTILS =====================
+function pickRandom(arr, exclude) {
+  const filtered = arr.filter(v => v !== exclude);
+  if (filtered.length === 0) return arr[Math.floor(Math.random() * arr.length)];
+  return filtered[Math.floor(Math.random() * filtered.length)];
+}
+
+function showToast(message, type = 'info') {
+  const container = document.getElementById('toast-container');
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  const icon = type === 'success' ? '✓' : '✨';
+  toast.innerHTML = `<span>${icon}</span> ${message}`;
+  container.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-50%) translateY(10px)';
+    toast.style.transition = 'all 0.2s ease';
+    setTimeout(() => toast.remove(), 200);
+  }, 2000);
+}
+
+// ===================== INIT =====================
+document.getElementById('summary-text').ondblclick = editSummary;
+renderResults();
+renderDuties();
+</script>
+</body>
+</html>

@@ -13,7 +13,6 @@ export interface Experience {
   original_bullets: string[];
   rewritten_bullets: string[];
   highlights: Highlight[];
-  technologies?: string[];
   responsibilities: string[];
 }
 

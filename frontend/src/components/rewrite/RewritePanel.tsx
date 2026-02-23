@@ -3,8 +3,7 @@ import type { RewriteResult } from '../../types/rewrite';
 import SummaryEditor from './SummaryEditor';
 import ExperienceEditor from './ExperienceEditor';
 import SkillsBlock from './SkillsBlock';
-import RecommendationsList from './RecommendationsList';
-import CopyAllBlock from './CopyAllBlock';
+import CopyAllBlock, { buildResumeText } from './CopyAllBlock';
 import ExportButtons from './ExportButtons';
 
 interface RewritePanelProps {
@@ -15,6 +14,9 @@ interface RewritePanelProps {
   isRechecking: boolean;
   taskId: string | null;
   onBulletUpdate: (blockId: number, bulletIndex: number, newText: string) => void;
+  onBulletAdd: (blockId: number, text: string) => void;
+  onBulletDelete: (blockId: number, bulletIndex: number) => void;
+  onDutiesUpdate: (blockId: number, duties: string[]) => void;
 }
 
 const accentColors = [
@@ -28,9 +30,14 @@ const accentColors = [
 export default function RewritePanel({
   data,
   selectedRole,
+  onSubmitRecheck,
   onChangeRole,
+  isRechecking,
   taskId,
   onBulletUpdate,
+  onBulletAdd,
+  onBulletDelete,
+  onDutiesUpdate,
 }: RewritePanelProps) {
   const [openExps, setOpenExps] = useState<Set<number>>(
     () => new Set(data.experiences.map((_, i) => i)),
@@ -128,6 +135,9 @@ export default function RewritePanel({
             taskId={taskId}
             selectedRole={selectedRole}
             onBulletUpdate={onBulletUpdate}
+            onBulletAdd={onBulletAdd}
+            onBulletDelete={onBulletDelete}
+            onDutiesUpdate={onDutiesUpdate}
           />
         ))}
       </div>
@@ -137,13 +147,6 @@ export default function RewritePanel({
         <SkillsBlock skills={data.skills} />
       </div>
 
-      {/* Recommendations — at the bottom as "what else to improve" */}
-      {data.recommendations.length > 0 && (
-        <div style={{ marginTop: 28 }}>
-          <RecommendationsList recommendations={data.recommendations} />
-        </div>
-      )}
-
       {/* Copy all + preview */}
       <div style={{ marginTop: 28 }}>
         <CopyAllBlock
@@ -151,6 +154,41 @@ export default function RewritePanel({
           experiences={data.experiences}
           skills={data.skills}
         />
+      </div>
+
+      {/* Submit for recheck */}
+      <div
+        className="nb-card-static"
+        style={{
+          marginTop: 20,
+          padding: 24,
+          borderColor: 'var(--accent-border)',
+          background: 'var(--accent-bg)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 16,
+        }}
+      >
+        <div>
+          <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--text-primary)' }}>
+            Готово?
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 2 }}>
+            AI проверит что получилось и покажет прогресс
+          </div>
+        </div>
+        <button
+          className="nb-button nb-button-primary"
+          onClick={() => {
+            const text = buildResumeText(data.summary, data.experiences, data.skills);
+            onSubmitRecheck(text);
+          }}
+          disabled={isRechecking}
+          style={{ whiteSpace: 'nowrap', padding: '10px 24px' }}
+        >
+          {isRechecking ? 'Проверяю...' : 'Проверить результат'}
+        </button>
       </div>
     </div>
   );
