@@ -74,10 +74,7 @@ def _calc_cost(usage) -> float:
 # Config
 # ---------------------------------------------------------------------------
 
-ANTHROPIC_API_KEY = os.environ.get(
-    "ANTHROPIC_API_KEY",
-    "",
-)
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
 
 MODEL = "claude-haiku-4-5-20251001"
 MAX_TOKENS = 16384
